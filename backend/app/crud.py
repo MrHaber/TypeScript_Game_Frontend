@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import json
+import random
 import sqlite3
+import string
 import uuid
+from datetime import datetime, timedelta, timezone
 
 from .database import ensure_user_defaults, hash_pin, title_for_level
 
@@ -10,6 +13,12 @@ from .database import ensure_user_defaults, hash_pin, title_for_level
 def create_session(db: sqlite3.Connection, user_id: int) -> str:
     token = uuid.uuid4().hex
     db.execute("INSERT INTO sessions (token, user_id) VALUES (?, ?)", (token, user_id))
+    return token
+
+
+def create_parent_session(db: sqlite3.Connection, parent_id: int) -> str:
+    token = uuid.uuid4().hex
+    db.execute("INSERT INTO parent_sessions (token, parent_id) VALUES (?, ?)", (token, parent_id))
     return token
 
 
@@ -23,6 +32,46 @@ def user_by_token(db: sqlite3.Connection, token: str) -> sqlite3.Row | None:
         """,
         (token,),
     ).fetchone()
+
+
+def parent_by_token(db: sqlite3.Connection, token: str) -> sqlite3.Row | None:
+    return db.execute(
+        """
+        SELECT parent_accounts.*
+        FROM parent_sessions
+        JOIN parent_accounts ON parent_accounts.id = parent_sessions.parent_id
+        WHERE parent_sessions.token = ?
+        """,
+        (token,),
+    ).fetchone()
+
+
+def parent_by_login(db: sqlite3.Connection, login: str) -> sqlite3.Row | None:
+    return db.execute("SELECT * FROM parent_accounts WHERE login = ?", (login.strip().lower(),)).fetchone()
+
+
+def create_parent_account(db: sqlite3.Connection, login: str, password: str, display_name: str | None = None) -> sqlite3.Row:
+    normalized = login.strip().lower()
+    cursor = db.execute(
+        """
+        INSERT INTO parent_accounts (login, display_name, password_hash)
+        VALUES (?, ?, ?)
+        """,
+        (normalized, display_name.strip() if display_name and display_name.strip() else normalized, hash_pin(password)),
+    )
+    return db.execute("SELECT * FROM parent_accounts WHERE id = ?", (int(cursor.lastrowid),)).fetchone()
+
+
+def verify_parent_password(parent: sqlite3.Row, password: str) -> bool:
+    return parent["password_hash"] == hash_pin(password)
+
+
+def serialize_parent(parent: sqlite3.Row) -> dict:
+    return {
+        "id": int(parent["id"]),
+        "login": parent["login"],
+        "displayName": parent["display_name"],
+    }
 
 
 def get_or_create_user(db: sqlite3.Connection, child_name: str, parent_pin: str = "1234") -> sqlite3.Row:
@@ -135,26 +184,53 @@ def snapshot(db: sqlite3.Connection, user: sqlite3.Row) -> dict:
 
 def normalize_room_code(room_code: str | None = None) -> str:
     if room_code and room_code.strip():
-        return room_code.strip().lower()
-    return str(uuid.uuid4())
+        return room_code.strip().upper()
+    alphabet = string.ascii_uppercase + string.digits
+    return f"UCHI-{''.join(random.choice(alphabet) for _ in range(4))}"
 
 
-def get_or_create_room(db: sqlite3.Connection, host_name: str, room_code: str | None = None) -> sqlite3.Row:
+def room_for_parent(db: sqlite3.Connection, parent_id: int) -> sqlite3.Row | None:
+    return db.execute(
+        """
+        SELECT *
+        FROM rooms
+        WHERE parent_id = ?
+        ORDER BY updated_at DESC
+        LIMIT 1
+        """,
+        (parent_id,),
+    ).fetchone()
+
+
+def get_or_create_room(db: sqlite3.Connection, host_name: str, room_code: str | None = None, parent_id: int | None = None) -> sqlite3.Row:
+    if parent_id is not None and not room_code:
+        existing_parent_room = room_for_parent(db, parent_id)
+        if existing_parent_room:
+            db.execute(
+                "UPDATE rooms SET host_name = ?, updated_at = CURRENT_TIMESTAMP WHERE code = ?",
+                (host_name, existing_parent_room["code"]),
+            )
+            return db.execute("SELECT * FROM rooms WHERE code = ?", (existing_parent_room["code"],)).fetchone()
+
     code = normalize_room_code(room_code)
+    while not room_code and db.execute("SELECT 1 FROM rooms WHERE code = ?", (code,)).fetchone():
+        code = normalize_room_code(None)
     existing = db.execute("SELECT * FROM rooms WHERE code = ?", (code,)).fetchone()
     if existing:
+        if parent_id is not None and existing["parent_id"] not in (None, parent_id):
+            raise PermissionError("room belongs to another parent")
         db.execute(
-            "UPDATE rooms SET host_name = ?, updated_at = CURRENT_TIMESTAMP WHERE code = ?",
-            (host_name, code),
+            "UPDATE rooms SET host_name = ?, parent_id = COALESCE(parent_id, ?), updated_at = CURRENT_TIMESTAMP WHERE code = ?",
+            (host_name, parent_id, code),
         )
         return db.execute("SELECT * FROM rooms WHERE code = ?", (code,)).fetchone()
 
     db.execute(
         """
-        INSERT INTO rooms (code, host_name)
-        VALUES (?, ?)
+        INSERT INTO rooms (code, parent_id, host_name)
+        VALUES (?, ?, ?)
         """,
-        (code, host_name),
+        (code, parent_id, host_name),
     )
     return db.execute("SELECT * FROM rooms WHERE code = ?", (code,)).fetchone()
 
@@ -189,6 +265,8 @@ def update_room_state(db: sqlite3.Connection, room_code: str, values: dict) -> s
         "active_stage_id": values.get("active_stage_id"),
         "game_started": None if values.get("game_started") is None else 1 if values["game_started"] else 0,
         "drawing_locked": None if values.get("drawing_locked") is None else 1 if values["drawing_locked"] else 0,
+        "timer_started": None if values.get("timer_started") is None else 1 if values["timer_started"] else 0,
+        "winners_revealed": None if values.get("winners_revealed") is None else 1 if values["winners_revealed"] else 0,
         "require_approval": None if values.get("require_approval") is None else 1 if values["require_approval"] else 0,
         "gallery_enabled": None if values.get("gallery_enabled") is None else 1 if values["gallery_enabled"] else 0,
         "sound_enabled": None if values.get("sound_enabled") is None else 1 if values["sound_enabled"] else 0,
@@ -202,7 +280,55 @@ def update_room_state(db: sqlite3.Connection, room_code: str, values: dict) -> s
             f"UPDATE rooms SET {', '.join(assignments)}, updated_at = CURRENT_TIMESTAMP WHERE code = ?",
             params,
         )
-    return room_by_code(db, room["code"])
+    if values.get("timer_started") is True:
+        db.execute(
+            """
+            UPDATE rooms
+            SET timer_started_at = COALESCE(timer_started_at, CURRENT_TIMESTAMP),
+                updated_at = CURRENT_TIMESTAMP
+            WHERE code = ?
+            """,
+            (room["code"],),
+        )
+    if values.get("timer_started") is False:
+        db.execute(
+            """
+            UPDATE rooms
+            SET timer_started_at = NULL,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE code = ?
+            """,
+            (room["code"],),
+        )
+    updated = room_by_code(db, room["code"])
+    if values.get("reset_players") or values.get("clear_drawings"):
+        db.execute(
+            """
+            UPDATE room_players
+            SET progress = 0,
+                status = 'drawing',
+                rating = 0,
+                stage_id = ?,
+                drawing_data = NULL,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE room_code = ?
+            """,
+            ((updated or room)["active_stage_id"], room["code"]),
+        )
+        db.execute(
+            """
+            UPDATE rooms
+            SET game_started = ?,
+                drawing_locked = 0,
+                timer_started = 0,
+                timer_started_at = NULL,
+                winners_revealed = 0,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE code = ?
+            """,
+            (1 if values.get("reset_players") else int((updated or room)["game_started"]), room["code"]),
+        )
+    return refresh_room_flags(db, room_by_code(db, room["code"]))
 
 
 def update_room_player(db: sqlite3.Connection, room_code: str, values: dict) -> sqlite3.Row | None:
@@ -223,6 +349,7 @@ def update_room_player(db: sqlite3.Connection, room_code: str, values: dict) -> 
     fields = {
         "progress": values.get("progress"),
         "status": values.get("status"),
+        "rating": values.get("rating"),
         "stage_id": values.get("stage_id"),
         "drawing_data": values.get("drawing_data"),
     }
@@ -239,10 +366,70 @@ def update_room_player(db: sqlite3.Connection, room_code: str, values: dict) -> 
             params,
         )
         db.execute("UPDATE rooms SET updated_at = CURRENT_TIMESTAMP WHERE code = ?", (room["code"],))
-    return room_by_code(db, room["code"])
+    return refresh_room_flags(db, room_by_code(db, room["code"]))
+
+
+def parse_sqlite_timestamp(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(timezone.utc)
+    except ValueError:
+        return datetime.strptime(value, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+
+
+def iso_utc(value: datetime | None) -> str | None:
+    if value is None:
+        return None
+    return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def timer_end_at(room: sqlite3.Row) -> datetime | None:
+    started_at = parse_sqlite_timestamp(room["timer_started_at"])
+    if started_at is None:
+        return None
+    return started_at + timedelta(minutes=int(room["timer"]))
+
+
+def room_time_is_up(room: sqlite3.Row) -> bool:
+    ends_at = timer_end_at(room)
+    return bool(room["game_started"] and room["timer_started"] and ends_at and datetime.now(timezone.utc) >= ends_at)
+
+
+def room_players_are_rated(db: sqlite3.Connection, room_code: str) -> bool:
+    summary = db.execute(
+        """
+        SELECT
+          COUNT(*) AS total,
+          SUM(CASE WHEN rating > 0 AND status IN ('approved', 'hidden') THEN 1 ELSE 0 END) AS rated
+        FROM room_players
+        WHERE room_code = ?
+        """,
+        (room_code,),
+    ).fetchone()
+    return bool(summary and int(summary["total"]) > 0 and int(summary["total"]) == int(summary["rated"] or 0))
+
+
+def refresh_room_flags(db: sqlite3.Connection, room: sqlite3.Row | None) -> sqlite3.Row | None:
+    if room is None:
+        return None
+    if not bool(room["winners_revealed"]) and room_time_is_up(room) and room_players_are_rated(db, room["code"]):
+        db.execute(
+            """
+            UPDATE rooms
+            SET winners_revealed = 1,
+                drawing_locked = 1,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE code = ?
+            """,
+            (room["code"],),
+        )
+        return room_by_code(db, room["code"])
+    return room
 
 
 def serialize_room(db: sqlite3.Connection, room: sqlite3.Row) -> dict:
+    room = refresh_room_flags(db, room) or room
     players = db.execute(
         """
         SELECT rowid, *
@@ -252,12 +439,18 @@ def serialize_room(db: sqlite3.Connection, room: sqlite3.Row) -> dict:
         """,
         (room["code"],),
     ).fetchall()
+    started_at = parse_sqlite_timestamp(room["timer_started_at"])
+    ends_at = timer_end_at(room)
     return {
         "code": room["code"],
         "hostName": room["host_name"],
         "activeMode": room["active_mode"],
         "activeStageId": room["active_stage_id"],
         "gameStarted": bool(room["game_started"]),
+        "timerStarted": bool(room["timer_started"]),
+        "timerStartedAt": iso_utc(started_at),
+        "timerEndsAt": iso_utc(ends_at),
+        "winnersRevealed": bool(room["winners_revealed"]),
         "settings": {
             "requireApproval": bool(room["require_approval"]),
             "galleryEnabled": bool(room["gallery_enabled"]),
@@ -272,6 +465,7 @@ def serialize_room(db: sqlite3.Connection, room: sqlite3.Row) -> dict:
                 "age": 6,
                 "progress": int(player["progress"]),
                 "status": player["status"],
+                "rating": int(player["rating"]),
                 "stageId": player["stage_id"],
                 "drawingData": player["drawing_data"],
             }

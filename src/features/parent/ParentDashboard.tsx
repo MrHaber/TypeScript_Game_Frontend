@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Copy, Eye, HelpCircle, Play, QrCode, ShieldCheck } from 'lucide-react';
+import { Copy, Eye, HelpCircle, Play, QrCode, RefreshCw, ShieldCheck, Trash2, Trophy } from 'lucide-react';
 import { Panel } from '../../components/Panel';
 import { gameModes } from '../drawing/data';
 import type { ApprovalStatus, GameMode, ParentSettings, Player, Stage } from '../drawing/types';
@@ -24,6 +24,9 @@ type ParentDashboardProps = {
   onSound: (value: boolean) => void;
   onStage: (id: string) => void;
   onStart: () => void;
+  onRestart: () => void;
+  onClearLesson: () => void;
+  onShowWinners: () => void;
   onTimer: (value: number) => void;
   onShowHelp: () => void;
 };
@@ -48,10 +51,13 @@ export function ParentDashboard({
   onSound,
   onStage,
   onStart,
+  onRestart,
+  onClearLesson,
+  onShowWinners,
   onTimer,
   onShowHelp,
 }: ParentDashboardProps) {
-  const filteredStages = stages.filter((stage) => activeMode === 'mixed' || stage.mode === activeMode || activeMode === 'free');
+  const filteredStages = stages.filter((stage) => activeMode === 'quiz' ? stage.mode === 'quiz' || stage.mode === 'mixed' : true);
   const firstPlayer = players[0] ?? { name: childName, progress: 0, drawingData: null };
   const didMountRef = useRef(false);
   const noticeTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
@@ -63,7 +69,7 @@ export function ParentDashboard({
     }
 
     setRoomNotice({ id: Date.now(), text });
-    noticeTimerRef.current = window.setTimeout(() => setRoomNotice(null), 3200);
+    noticeTimerRef.current = window.setTimeout(() => setRoomNotice(null), 2800);
   }
 
   useEffect(() => {
@@ -99,7 +105,7 @@ export function ParentDashboard({
     <section className="parentLayout">
       <section className="parentHero">
         <div>
-          <p className="eyebrow">Панель хоста</p>
+          <p className="eyebrow">Панель родителя</p>
           <h1>Дэшборд занятия</h1>
           <p>Вход детей, режимы игры, категории, проверка рисунков и быстрый просмотр в одном месте.</p>
         </div>
@@ -110,7 +116,7 @@ export function ParentDashboard({
 
       <section className="parentGrid dashboardGrid">
         <div className="dashboardColumn">
-          <Panel title="Комната и вход" hint="Покажите код детям. Они входят по имени, а хост видит их в списке.">
+          <Panel className="roomEntryPanel" title="Комната и вход" hint="Покажите код детям. Они входят по имени, а родитель видит их в списке.">
             {roomNotice && (
               <div key={roomNotice.id} className="roomUpdateToast" role="status">
                 {roomNotice.text}
@@ -137,9 +143,19 @@ export function ParentDashboard({
                 {gameStarted ? 'Продолжить занятие' : 'Начать занятие'}
               </button>
             </div>
+            <div className="roomActions">
+              <button className="secondaryButton" type="button" onClick={onRestart}>
+                <RefreshCw size={20} />
+                Перезапустить
+              </button>
+              <button className="dangerButton" type="button" onClick={onClearLesson}>
+                <Trash2 size={20} />
+                Очистить занятие
+              </button>
+            </div>
           </Panel>
 
-          <Panel title="Категории рисунков" hint="Категорию выбирает хост. У ребенка остается только большой холст.">
+          <Panel title="Категории рисунков" hint="Категорию выбирает родитель. У ребенка остается только большой холст.">
             <div className="stageList">
               {filteredStages.map((stage) => (
                 <button className={stage.id === activeStage?.id ? 'stageCard isSelected' : 'stageCard'} type="button" key={stage.id} onClick={() => onStage(stage.id)}>
@@ -159,11 +175,15 @@ export function ParentDashboard({
             <ToggleRow label="Показать галерею в конце" checked={settings.galleryEnabled} onChange={onGallery} />
             <ToggleRow label="Звук подсказок" checked={settings.soundEnabled} onChange={onSound} />
             <ToggleRow label="Пауза рисования" checked={settings.drawingLocked} onChange={onLock} />
+            <button className="secondaryButton" type="button" onClick={onShowWinners}>
+              <Trophy size={20} />
+              Список победителей
+            </button>
           </Panel>
         </div>
 
         <div className="dashboardColumn">
-          <Panel title="Режим игры" hint="Режимы не удалены: хост выбирает, будет ли только рисование, вопросы или смешанный сценарий.">
+          <Panel title="Режим игры" hint="Режимы не удалены: родитель выбирает, будет ли только рисование, вопросы или смешанный сценарий.">
             <div className="modeList">
               {gameModes.map((mode) => (
                 <button key={mode.id} className={mode.id === activeMode ? 'modeCard isSelected' : 'modeCard'} type="button" onClick={() => onMode(mode.id)}>
@@ -183,6 +203,7 @@ export function ParentDashboard({
                     <span style={{ width: `${player.progress}%` }} />
                   </div>
                   <StatusBadge status={player.status} />
+                  <span className="playerStars">{'★'.repeat(player.rating ?? 0) || '—'}</span>
                   <button className="iconAction" type="button" onClick={() => onPreview(player.name)} aria-label={`Просмотреть рисунок ${player.name}`}>
                     <Eye size={18} />
                   </button>

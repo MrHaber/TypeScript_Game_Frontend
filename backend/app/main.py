@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -15,6 +17,8 @@ from .schemas import (
     LoginIn,
     ParentControlsIn,
     ParentControlsOut,
+    ParentAuthIn,
+    ParentAuthOut,
     PlayerOut,
     RegisterIn,
     RoomOut,
@@ -25,9 +29,15 @@ from .schemas import (
 
 app = FastAPI(title="Uchi Drawing Game API", version="0.1.0")
 
+cors_origins = [
+    origin.strip()
+    for origin in os.getenv("CORS_ORIGINS", "http://127.0.0.1:5173,http://localhost:5173").split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5173", "http://localhost:5173"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -48,6 +58,24 @@ def current_user(authorization: str | None = Header(default=None)):
       if user is None:
           raise HTTPException(status_code=401, detail="Сессия не найдена")
       return dict(user)
+
+
+def current_parent(authorization: str | None = Header(default=None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Нужно войти как родитель")
+    token = authorization.removeprefix("Bearer ").strip()
+    with connect() as db:
+        parent = crud.parent_by_token(db, token)
+        if parent is None:
+            raise HTTPException(status_code=401, detail="Сессия родителя не найдена")
+        return dict(parent)
+
+
+def ensure_parent_owns_room(parent: dict, room: dict | object) -> None:
+    parent_id = int(parent["id"])
+    room_parent_id = room["parent_id"] if not isinstance(room, dict) else room.get("parent_id")
+    if room_parent_id is not None and int(room_parent_id) != parent_id:
+        raise HTTPException(status_code=403, detail="Комната принадлежит другому родителю")
 
 
 @app.get("/api/health")
@@ -76,6 +104,37 @@ def login(payload: LoginIn):
         token = crud.create_session(db, int(user["id"]))
         data = crud.snapshot(db, user)
         return {**data, "token": token}
+
+
+@app.post("/api/parents/register", response_model=ParentAuthOut)
+def register_parent(payload: ParentAuthIn):
+    with connect() as db:
+        existing = crud.parent_by_login(db, payload.login)
+        if existing:
+            raise HTTPException(status_code=409, detail="Родитель с таким логином уже есть")
+        parent = crud.create_parent_account(db, payload.login, payload.password, payload.display_name)
+        token = crud.create_parent_session(db, int(parent["id"]))
+        room = crud.get_or_create_room(db, parent["display_name"], parent_id=int(parent["id"]))
+        return {"token": token, "parent": crud.serialize_parent(parent), "room": crud.serialize_room(db, room)}
+
+
+@app.post("/api/parents/login", response_model=ParentAuthOut)
+def login_parent(payload: ParentAuthIn):
+    with connect() as db:
+        parent = crud.parent_by_login(db, payload.login)
+        if parent is None or not crud.verify_parent_password(parent, payload.password):
+            raise HTTPException(status_code=401, detail="Неверный логин или пароль")
+        token = crud.create_parent_session(db, int(parent["id"]))
+        room = crud.get_or_create_room(db, parent["display_name"], parent_id=int(parent["id"]))
+        return {"token": token, "parent": crud.serialize_parent(parent), "room": crud.serialize_room(db, room)}
+
+
+@app.get("/api/parents/me", response_model=ParentAuthOut)
+def parent_me(parent=Depends(current_parent)):
+    with connect() as db:
+        db_parent = db.execute("SELECT * FROM parent_accounts WHERE id = ?", (parent["id"],)).fetchone()
+        room = crud.get_or_create_room(db, db_parent["display_name"], parent_id=int(db_parent["id"]))
+        return {"token": "", "parent": crud.serialize_parent(db_parent), "room": crud.serialize_room(db, room)}
 
 
 @app.get("/api/me", response_model=SnapshotOut)
@@ -143,9 +202,12 @@ def update_parent_controls(payload: ParentControlsIn, user=Depends(current_user)
 
 
 @app.post("/api/rooms/host", response_model=RoomOut)
-def host_room(payload: HostRoomIn):
+def host_room(payload: HostRoomIn, parent=Depends(current_parent)):
     with connect() as db:
-        room = crud.get_or_create_room(db, payload.host_name, payload.room_code)
+        try:
+            room = crud.get_or_create_room(db, payload.host_name, payload.room_code, parent_id=int(parent["id"]))
+        except PermissionError:
+            raise HTTPException(status_code=403, detail="Комната принадлежит другому родителю")
         return crud.serialize_room(db, room)
 
 
@@ -168,8 +230,12 @@ def room_snapshot(room_code: str):
 
 
 @app.patch("/api/rooms/{room_code}", response_model=RoomOut)
-def patch_room(room_code: str, payload: RoomStateIn):
+def patch_room(room_code: str, payload: RoomStateIn, parent=Depends(current_parent)):
     with connect() as db:
+        existing = crud.room_by_code(db, room_code)
+        if existing is None:
+            raise HTTPException(status_code=404, detail="Комната не найдена")
+        ensure_parent_owns_room(parent, existing)
         room = crud.update_room_state(db, room_code, payload.dict(exclude_unset=True))
         if room is None:
             raise HTTPException(status_code=404, detail="Комната не найдена")
@@ -177,8 +243,20 @@ def patch_room(room_code: str, payload: RoomStateIn):
 
 
 @app.patch("/api/rooms/{room_code}/players", response_model=RoomOut)
-def patch_room_player(room_code: str, payload: RoomPlayerIn):
+def patch_room_player(room_code: str, payload: RoomPlayerIn, authorization: str | None = Header(default=None)):
     with connect() as db:
+        values = payload.dict(exclude_unset=True)
+        parent_action = values.get("rating") is not None or values.get("status") in {"approved", "hidden"}
+        if parent_action:
+            if not authorization or not authorization.startswith("Bearer "):
+                raise HTTPException(status_code=401, detail="Нужно войти как родитель")
+            parent = crud.parent_by_token(db, authorization.removeprefix("Bearer ").strip())
+            if parent is None:
+                raise HTTPException(status_code=401, detail="Сессия родителя не найдена")
+            existing = crud.room_by_code(db, room_code)
+            if existing is None:
+                raise HTTPException(status_code=404, detail="Комната не найдена")
+            ensure_parent_owns_room(dict(parent), existing)
         room = crud.update_room_player(db, room_code, payload.dict(exclude_unset=True))
         if room is None:
             raise HTTPException(status_code=404, detail="Комната не найдена")

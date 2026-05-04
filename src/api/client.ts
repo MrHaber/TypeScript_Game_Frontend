@@ -1,10 +1,32 @@
 import { Achievement, AppSnapshot, AuthResponse, BackgroundKind, Drawing, Player } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? '/api';
 
 type ApiErrorPayload = {
   detail?: string;
 };
+
+function fallbackErrorMessage(status: number, path: string, statusText: string) {
+  if (status === 404 && path.startsWith('/parents/')) {
+    return 'Сервер еще не обновлен: перезапустите backend, чтобы включить регистрацию родителей.';
+  }
+  if (status === 404) {
+    return 'Запрошенный раздел не найден. Проверьте, что backend запущен с последней версией.';
+  }
+  if (status === 409) {
+    return 'Такой аккаунт уже существует. Попробуйте войти или выберите другой логин.';
+  }
+  if (status === 401) {
+    return 'Неверный логин или пароль.';
+  }
+  if (status === 422) {
+    return 'Проверьте поля формы: логин от 3 символов, пароль от 4 символов.';
+  }
+  if (status >= 500) {
+    return 'Ошибка сервера. Попробуйте еще раз или перезапустите backend.';
+  }
+  return statusText && statusText !== 'Not Found' ? statusText : 'Не удалось выполнить запрос.';
+}
 
 export type RoomPlayer = {
   id: number;
@@ -12,6 +34,7 @@ export type RoomPlayer = {
   age: number;
   progress: number;
   status: 'drawing' | 'waiting' | 'approved' | 'hidden';
+  rating: number;
   stageId: string;
   drawingData?: string | null;
 };
@@ -22,6 +45,10 @@ export type RoomSnapshot = {
   activeMode: 'drawing' | 'quiz' | 'mixed' | 'free';
   activeStageId: string;
   gameStarted: boolean;
+  timerStarted: boolean;
+  timerStartedAt?: string | null;
+  timerEndsAt?: string | null;
+  winnersRevealed: boolean;
   settings: {
     requireApproval: boolean;
     galleryEnabled: boolean;
@@ -32,15 +59,43 @@ export type RoomSnapshot = {
   players: RoomPlayer[];
 };
 
+export type ParentAccount = {
+  id: number;
+  login: string;
+  displayName: string;
+};
+
+export type ParentAuthResponse = {
+  token: string;
+  parent: ParentAccount;
+  room: RoomSnapshot;
+};
+
 async function request<T>(path: string, options: RequestInit = {}, token?: string): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+      },
+    });
+  } catch {
+    throw new Error('Backend недоступен. Запустите или перезапустите сервер и попробуйте еще раз.');
+  }
+
+  if (!response.ok) {
+    let message = fallbackErrorMessage(response.status, path, response.statusText);
+    try {
+      const payload = (await response.json()) as ApiErrorPayload;
+      message = payload.detail && payload.detail !== 'Not Found' ? payload.detail : message;
+    } catch {
+      // Keep the localized fallback above when the server returns an empty or non-JSON error.
+    }
+    throw new Error(message);
+  }
 
   if (!response.ok) {
     let message = 'Сервер временно недоступен';
@@ -103,11 +158,29 @@ export const api = {
     }, token);
   },
 
-  hostRoom(hostName: string, roomCode?: string) {
+  parentLogin(login: string, password: string) {
+    return request<ParentAuthResponse>('/parents/login', {
+      method: 'POST',
+      body: JSON.stringify({ login, password }),
+    });
+  },
+
+  parentRegister(login: string, password: string, displayName: string) {
+    return request<ParentAuthResponse>('/parents/register', {
+      method: 'POST',
+      body: JSON.stringify({ login, password, display_name: displayName }),
+    });
+  },
+
+  parentMe(token: string) {
+    return request<ParentAuthResponse>('/parents/me', {}, token);
+  },
+
+  hostRoom(hostName: string, roomCode: string | undefined, token: string) {
     return request<RoomSnapshot>('/rooms/host', {
       method: 'POST',
       body: JSON.stringify({ host_name: hostName, ...(roomCode ? { room_code: roomCode } : {}) }),
-    });
+    }, token);
   },
 
   childRoom(childName: string, roomCode: string) {
@@ -126,27 +199,32 @@ export const api = {
     active_stage_id: string;
     game_started: boolean;
     drawing_locked: boolean;
+    timer_started: boolean;
+    winners_revealed: boolean;
     require_approval: boolean;
     gallery_enabled: boolean;
     sound_enabled: boolean;
     timer: number;
-  }>) {
+    reset_players: boolean;
+    clear_drawings: boolean;
+  }>, token?: string) {
     return request<RoomSnapshot>(`/rooms/${encodeURIComponent(roomCode)}`, {
       method: 'PATCH',
       body: JSON.stringify(payload),
-    });
+    }, token);
   },
 
   updateRoomPlayer(roomCode: string, payload: {
     child_name: string;
     progress?: number;
     status?: RoomPlayer['status'];
+    rating?: number;
     stage_id?: string;
     drawing_data?: string;
-  }) {
+  }, token?: string) {
     return request<RoomSnapshot>(`/rooms/${encodeURIComponent(roomCode)}/players`, {
       method: 'PATCH',
       body: JSON.stringify(payload),
-    });
+    }, token);
   },
 };

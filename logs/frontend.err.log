@@ -1,0 +1,268 @@
+[2m17:05:47[22m [31m[1m[vite][22m[39m [31mInternal server error: C:\Users\user\Desktop\TypeScript Game Frontend\src\App.tsx: Expected corresponding JSX closing tag for <>. (497:10)
+
+[0m [90m 495 |[31m               [33m<[31m[33m/[31m[33mbutton[31m[33m>[31m
+ [90m 496 |[31m             [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+[31m[1m>[22m[31m[90m 497 |[31m           [33m<[31m[33m/[31m[33msection[31m[33m>[31m
+ [90m     |[31m           [31m[1m^[22m[31m
+ [90m 498 |[31m         [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+ [90m 499 |[31m       )}
+ [90m 500 |[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/user/Desktop/TypeScript Game Frontend/src/App.tsx[39m:497:10
+[33m  495|                </button>
+  496|              </div>
+  497|            </section>
+     |            ^
+  498|          </div>
+  499|        )}[39m
+      at constructor (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:365:19)
+      at TypeScriptParserMixin.raise (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:6599:19)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4720:14)
+      at TypeScriptParserMixin.jsxParseElement (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4749:17)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4759:19)
+      at TypeScriptParserMixin.parseExprSubscripts (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10904:23)
+      at TypeScriptParserMixin.parseMaybeConditional (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10831:21)
+      at C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9775:39
+      at TypeScriptParserMixin.tryParse (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:6907:20)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9775:18)
+      at C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10800:39
+      at TypeScriptParserMixin.allowInAnd (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:12426:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10800:17)
+      at TypeScriptParserMixin.parseMaybeAssignAllowInOrVoidPattern (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:12493:17)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11675:28)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11331:23)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4764:20)
+      at TypeScriptParserMixin.parseExprSubscripts (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOpBaseRightExpr (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10986:34)
+      at TypeScriptParserMixin.parseExprOpRightExpr (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10981:21)
+      at TypeScriptParserMixin.parseExprOp (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10947:27)
+      at TypeScriptParserMixin.parseExprOp (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9306:18)
+      at TypeScriptParserMixin.parseExprOp (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10953:21)
+      at TypeScriptParserMixin.parseExprOp (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9306:18)
+      at TypeScriptParserMixin.parseExprOps (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10908:17)
+      at TypeScriptParserMixin.parseMaybeConditional (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10831:21)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9786:20)
+      at TypeScriptParserMixin.parseExpressionBase (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10784:23)
+      at C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10780:39
+      at TypeScriptParserMixin.allowInAnd (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:12426:12)
+      at TypeScriptParserMixin.parseExpression (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10780:17)
+      at TypeScriptParserMixin.jsxParseExpressionContainer (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4632:31)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4711:36)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4698:32)
+      at TypeScriptParserMixin.jsxParseElement (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4749:17)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4759:19)
+      at TypeScriptParserMixin.parseExprSubscripts (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11046:23)
+[2m17:05:47[22m [31m[1m[vite][22m[39m [31mInternal server error: C:\Users\user\Desktop\TypeScript Game Frontend\src\App.tsx: Expected corresponding JSX closing tag for <>. (497:10)
+
+[0m [90m 495 |[31m               [33m<[31m[33m/[31m[33mbutton[31m[33m>[31m
+ [90m 496 |[31m             [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+[31m[1m>[22m[31m[90m 497 |[31m           [33m<[31m[33m/[31m[33msection[31m[33m>[31m
+ [90m     |[31m           [31m[1m^[22m[31m
+ [90m 498 |[31m         [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+ [90m 499 |[31m       )}
+ [90m 500 |[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/user/Desktop/TypeScript Game Frontend/src/App.tsx[39m:497:10
+[33m  495|                </button>
+  496|              </div>
+  497|            </section>
+     |            ^
+  498|          </div>
+  499|        )}[39m
+      at constructor (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:365:19)
+      at TypeScriptParserMixin.raise (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:6599:19)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4720:14)
+      at TypeScriptParserMixin.jsxParseElement (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4749:17)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4759:19)
+      at TypeScriptParserMixin.parseExprSubscripts (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10904:23)
+      at TypeScriptParserMixin.parseMaybeConditional (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10831:21)
+      at C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9775:39
+      at TypeScriptParserMixin.tryParse (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:6907:20)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9775:18)
+      at C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10800:39
+      at TypeScriptParserMixin.allowInAnd (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:12426:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10800:17)
+      at TypeScriptParserMixin.parseMaybeAssignAllowInOrVoidPattern (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:12493:17)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11675:28)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11331:23)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4764:20)
+      at TypeScriptParserMixin.parseExprSubscripts (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOpBaseRightExpr (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10986:34)
+      at TypeScriptParserMixin.parseExprOpRightExpr (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10981:21)
+      at TypeScriptParserMixin.parseExprOp (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10947:27)
+      at TypeScriptParserMixin.parseExprOp (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9306:18)
+      at TypeScriptParserMixin.parseExprOp (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10953:21)
+      at TypeScriptParserMixin.parseExprOp (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9306:18)
+      at TypeScriptParserMixin.parseExprOps (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10908:17)
+      at TypeScriptParserMixin.parseMaybeConditional (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10831:21)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9786:20)
+      at TypeScriptParserMixin.parseExpressionBase (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10784:23)
+      at C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10780:39
+      at TypeScriptParserMixin.allowInAnd (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:12426:12)
+      at TypeScriptParserMixin.parseExpression (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10780:17)
+      at TypeScriptParserMixin.jsxParseExpressionContainer (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4632:31)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4711:36)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4698:32)
+      at TypeScriptParserMixin.jsxParseElement (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4749:17)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4759:19)
+      at TypeScriptParserMixin.parseExprSubscripts (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11046:23)
+[2m17:22:48[22m [31m[1m[vite][22m[39m [31mInternal server error: C:\Users\user\Desktop\TypeScript Game Frontend\src\App.tsx: Adjacent JSX elements must be wrapped in an enclosing tag. Did you want a JSX fragment <>...</>? (388:12)
+
+[0m [90m 386 |[31m               {timerStarted [33m?[31m [32m`${Math.floor(remainingSeconds / 60)}:${String(remainingSeconds % 60).padStart(2, '0')}`[31m [33m:[31m [32m`${settings.timer} мин`[31m}
+ [90m 387 |[31m             [33m<[31m[33m/[31m[33mspan[31m[33m>[31m
+[31m[1m>[22m[31m[90m 388 |[31m             [33m<[31m[33mspan[31m[33m>[31m
+ [90m     |[31m             [31m[1m^[22m[31m
+ [90m 389 |[31m               [33m<[31m[33mStar[31m size[33m=[31m{[35m18[31m} [33m/[31m[33m>[31m
+ [90m 390 |[31m               {progress}[33m%[31m
+ [90m 391 |[31m             [33m<[31m[33m/[31m[33mspan[31m[33m>[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/user/Desktop/TypeScript Game Frontend/src/App.tsx[39m:388:12
+[33m  386|                {timerStarted ? `${Math.floor(remainingSeconds / 60)}:${String(remainingSeconds % 60).padStart(2, '0')}` : `${settings.timer} мин`}
+  387|              </span>
+  388|              <span>
+     |              ^
+  389|                <Star size={18} />
+  390|                {progress}%[39m
+      at constructor (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:365:19)
+      at TypeScriptParserMixin.raise (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:6599:19)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4742:18)
+      at TypeScriptParserMixin.jsxParseElement (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4749:17)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4759:19)
+      at TypeScriptParserMixin.parseExprSubscripts (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10904:23)
+      at TypeScriptParserMixin.parseMaybeConditional (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10831:21)
+      at C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9775:39
+      at TypeScriptParserMixin.tryParse (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:6907:20)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9775:18)
+      at C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10800:39
+      at TypeScriptParserMixin.allowInAnd (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:12426:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10800:17)
+      at TypeScriptParserMixin.parseMaybeAssignAllowInOrVoidPattern (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:12493:17)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11675:28)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11331:23)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4764:20)
+      at TypeScriptParserMixin.parseExprSubscripts (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOpBaseRightExpr (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10986:34)
+      at TypeScriptParserMixin.parseExprOpRightExpr (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10981:21)
+      at TypeScriptParserMixin.parseExprOp (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10947:27)
+      at TypeScriptParserMixin.parseExprOp (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9306:18)
+      at TypeScriptParserMixin.parseExprOp (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10953:21)
+      at TypeScriptParserMixin.parseExprOp (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9306:18)
+      at TypeScriptParserMixin.parseExprOps (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10908:17)
+      at TypeScriptParserMixin.parseMaybeConditional (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10831:21)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9786:20)
+      at TypeScriptParserMixin.parseExpressionBase (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10784:23)
+      at C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10780:39
+      at TypeScriptParserMixin.allowInAnd (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:12426:12)
+      at TypeScriptParserMixin.parseExpression (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10780:17)
+      at TypeScriptParserMixin.jsxParseExpressionContainer (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4632:31)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4711:36)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4698:32)
+      at TypeScriptParserMixin.jsxParseElement (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4749:17)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4759:19)
+      at TypeScriptParserMixin.parseExprSubscripts (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11046:23)
+[2m17:22:48[22m [31m[1m[vite][22m[39m [31mInternal server error: C:\Users\user\Desktop\TypeScript Game Frontend\src\App.tsx: Adjacent JSX elements must be wrapped in an enclosing tag. Did you want a JSX fragment <>...</>? (388:12)
+
+[0m [90m 386 |[31m               {timerStarted [33m?[31m [32m`${Math.floor(remainingSeconds / 60)}:${String(remainingSeconds % 60).padStart(2, '0')}`[31m [33m:[31m [32m`${settings.timer} мин`[31m}
+ [90m 387 |[31m             [33m<[31m[33m/[31m[33mspan[31m[33m>[31m
+[31m[1m>[22m[31m[90m 388 |[31m             [33m<[31m[33mspan[31m[33m>[31m
+ [90m     |[31m             [31m[1m^[22m[31m
+ [90m 389 |[31m               [33m<[31m[33mStar[31m size[33m=[31m{[35m18[31m} [33m/[31m[33m>[31m
+ [90m 390 |[31m               {progress}[33m%[31m
+ [90m 391 |[31m             [33m<[31m[33m/[31m[33mspan[31m[33m>[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/user/Desktop/TypeScript Game Frontend/src/App.tsx[39m:388:12
+[33m  386|                {timerStarted ? `${Math.floor(remainingSeconds / 60)}:${String(remainingSeconds % 60).padStart(2, '0')}` : `${settings.timer} мин`}
+  387|              </span>
+  388|              <span>
+     |              ^
+  389|                <Star size={18} />
+  390|                {progress}%[39m
+      at constructor (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:365:19)
+      at TypeScriptParserMixin.raise (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:6599:19)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4742:18)
+      at TypeScriptParserMixin.jsxParseElement (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4749:17)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4759:19)
+      at TypeScriptParserMixin.parseExprSubscripts (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10904:23)
+      at TypeScriptParserMixin.parseMaybeConditional (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10831:21)
+      at C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9775:39
+      at TypeScriptParserMixin.tryParse (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:6907:20)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9775:18)
+      at C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10800:39
+      at TypeScriptParserMixin.allowInAnd (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:12426:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10800:17)
+      at TypeScriptParserMixin.parseMaybeAssignAllowInOrVoidPattern (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:12493:17)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11675:28)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11331:23)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4764:20)
+      at TypeScriptParserMixin.parseExprSubscripts (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOpBaseRightExpr (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10986:34)
+      at TypeScriptParserMixin.parseExprOpRightExpr (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10981:21)
+      at TypeScriptParserMixin.parseExprOp (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10947:27)
+      at TypeScriptParserMixin.parseExprOp (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9306:18)
+      at TypeScriptParserMixin.parseExprOp (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10953:21)
+      at TypeScriptParserMixin.parseExprOp (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9306:18)
+      at TypeScriptParserMixin.parseExprOps (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10908:17)
+      at TypeScriptParserMixin.parseMaybeConditional (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10831:21)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:9786:20)
+      at TypeScriptParserMixin.parseExpressionBase (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10784:23)
+      at C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10780:39
+      at TypeScriptParserMixin.allowInAnd (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:12426:12)
+      at TypeScriptParserMixin.parseExpression (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:10780:17)
+      at TypeScriptParserMixin.jsxParseExpressionContainer (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4632:31)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4711:36)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4698:32)
+      at TypeScriptParserMixin.jsxParseElement (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4749:17)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:4759:19)
+      at TypeScriptParserMixin.parseExprSubscripts (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11046:23)

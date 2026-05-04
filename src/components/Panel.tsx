@@ -1,9 +1,9 @@
 import { HelpCircle } from 'lucide-react';
 import type { PanelProps } from '../features/drawing/types';
 
-export function Panel({ title, hint, children }: PanelProps) {
+export function Panel({ title, hint, className, children }: PanelProps) {
   return (
-    <section className="panel">
+    <section className={className ? `panel ${className}` : 'panel'}>
       <div className="panelHeader">
         <h2>{title}</h2>
         {hint && (

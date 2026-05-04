@@ -15,7 +15,7 @@ type DrawingScreenProps = DrawingHandlers & {
   soundEnabled: boolean;
   tool: Tool;
   onColor: (value: string) => void;
-  onFinish: () => void;
+  onFinish: () => void | Promise<void>;
   onPreview: () => void;
   onSize: (value: number) => void;
   onTool: (value: Tool) => void;
@@ -77,26 +77,28 @@ export function DrawingScreen({
             onPointerCancel={stopDrawing}
             onPointerLeave={stopDrawing}
           />
-          <div className="drawHint">
-            <Brush size={20} />
-            Рисуй здесь
-          </div>
+          {!readyForReview && (
+            <div className="drawHint">
+              <Brush size={20} />
+              Рисуй здесь
+            </div>
+          )}
           {!gameStarted && (
             <div className="softOverlay">
               <Play size={34} />
-              <span>Хост скоро начнет занятие</span>
-            </div>
-          )}
-          {gameStarted && drawingLocked && (
-            <div className="softOverlay">
-              <Lock size={34} />
-              <span>Хост остановил рисование</span>
+              <span>Родитель скоро начнет занятие</span>
             </div>
           )}
           {readyForReview && (
-            <div className="readyRibbon">
-              <Check size={20} />
-              Рисунок отправлен хосту
+            <div className="softOverlay reviewOverlay">
+              <Check size={34} />
+              <span>Ваш рисунок проверяется</span>
+            </div>
+          )}
+          {gameStarted && drawingLocked && !readyForReview && (
+            <div className="softOverlay">
+              <Lock size={34} />
+              <span>Родитель остановил рисование</span>
             </div>
           )}
         </div>
@@ -142,8 +144,8 @@ export function DrawingScreen({
         </div>
 
         <label className="sizeControl">
-          <span>Толстая линия</span>
-          <input min="8" max="36" value={size} type="range" onChange={(event) => onSize(Number(event.target.value))} />
+          <span>Толщина линии</span>
+          <input min="3" max="18" value={size} type="range" onChange={(event) => onSize(Number(event.target.value))} />
         </label>
 
         <aside className="hintBox">
@@ -155,11 +157,11 @@ export function DrawingScreen({
         </aside>
 
         <div className="actionStack">
-          <button className="secondaryButton" type="button" onClick={undo} disabled={historyCount === 0}>
+          <button className="secondaryButton" type="button" onClick={undo} disabled={historyCount === 0 || readyForReview}>
             <Undo2 size={20} />
             Назад
           </button>
-          <button className="secondaryButton" type="button" onClick={clearCanvas}>
+          <button className="secondaryButton" type="button" onClick={clearCanvas} disabled={readyForReview}>
             <Trash2 size={20} />
             Очистить
           </button>
@@ -171,7 +173,7 @@ export function DrawingScreen({
             <Eye size={20} />
             Просмотр
           </button>
-          <button className="primaryButton" type="button" onClick={onFinish}>
+          <button className="primaryButton" type="button" onClick={onFinish} disabled={readyForReview}>
             <Check size={20} />
             Готово
           </button>

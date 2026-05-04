@@ -22,6 +22,7 @@ export type Player = {
   age: number;
   progress: number;
   status: ApprovalStatus;
+  rating?: number;
   stageId?: string;
   drawingData?: string | null;
 };
@@ -42,12 +43,14 @@ export type DrawingHandlers = {
   stopDrawing: (event?: ReactPointerEvent<HTMLCanvasElement>) => void;
   undo: () => void;
   clearCanvas: () => void;
-  downloadDrawing: () => void;
+  downloadDrawing: () => void | Promise<void>;
   getSnapshot: () => string;
+  getCompositeSnapshot: () => Promise<string>;
 };
 
 export type PanelProps = {
   title: string;
   hint?: string;
+  className?: string;
   children: ReactNode;
 };

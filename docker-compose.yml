@@ -1,0 +1,44 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: uchi-backend
+    restart: unless-stopped
+    environment:
+      UCHI_DB_PATH: /data/uchi_game.sqlite3
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost,http://127.0.0.1,http://127.0.0.1:5173,http://localhost:5173}
+    expose:
+      - "8000"
+    volumes:
+      - uchi_backend_data:/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3).read()",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api}
+    container_name: uchi-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      FRONTEND_DOMAIN: ${FRONTEND_DOMAIN:-_}
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+
+volumes:
+  uchi_backend_data:

@@ -3,3 +3,5 @@ dist/
 .codex_tmp/
 *.tsbuildinfo
 logs/
+.env
+.env.local

@@ -12,14 +12,14 @@ export function TourCard({ audience, onClose }: { audience: Exclude<Role, 'login
     : [
         'Смотри на большое поле с картинкой.',
         'Выбери цвет и рисуй пальцем или мышкой прямо по картинке.',
-        'Когда закончишь, нажми "Готово", чтобы хост увидел работу.',
+        'Когда закончишь, нажми "Готово", чтобы родитель увидел работу.',
       ];
 
   return (
     <div className="tourBackdrop">
       <section className="tourCard">
         <div className="tourIcon">{isParent ? <Users size={34} /> : <Award size={34} />}</div>
-        <p className="eyebrow">{isParent ? 'Обучение для хоста' : 'Обучение для ребенка'}</p>
+        <p className="eyebrow">{isParent ? 'Обучение для родителя' : 'Обучение для ребенка'}</p>
         <h2>{isParent ? 'Как провести занятие' : 'Как рисовать'}</h2>
         <ol>
           {steps.map((step) => (

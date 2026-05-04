@@ -3,14 +3,17 @@ import { Clock3, Eye, Star } from 'lucide-react';
 import { TourCard } from './components/TourCard';
 import { api, type RoomSnapshot } from './api/client';
 import { LoginGate } from './features/auth/LoginGate';
-import { buildStages, drawingColors, initialPlayers } from './features/drawing/data';
+import { buildStages, drawingColors, winnersBackground } from './features/drawing/data';
 import { DrawingScreen } from './features/drawing/DrawingScreen';
+import { WinnersScreen } from './features/drawing/WinnersScreen';
 import type { ApprovalStatus, GameMode, ParentSettings, Player, Role, Tool } from './features/drawing/types';
 import { useDrawingCanvas } from './features/drawing/useDrawingCanvas';
 import { ParentDashboard } from './features/parent/ParentDashboard';
 
 function makeRoomCode() {
-  return globalThis.crypto?.randomUUID?.() ?? `room-${Date.now()}`;
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const suffix = Array.from({ length: 4 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
+  return `UCHI-${suffix}`;
 }
 
 export function App() {
@@ -18,14 +21,21 @@ export function App() {
   const [role, setRole] = useState<Role>('login');
   const [childName, setChildName] = useState('Миша');
   const [hostName, setHostName] = useState('Светлана');
-  const [roomCode, setRoomCodeState] = useState(() => localStorage.getItem('uchi-room-code') ?? makeRoomCode());
+  const [parentLogin, setParentLogin] = useState(() => localStorage.getItem('uchi-parent-login') ?? '');
+  const [parentPassword, setParentPassword] = useState('');
+  const [parentRegistering, setParentRegistering] = useState(false);
+  const [parentToken, setParentToken] = useState(() => localStorage.getItem('uchi-parent-token') ?? '');
+  const [roomCode, setRoomCodeState] = useState(() => {
+    const saved = localStorage.getItem('uchi-room-code');
+    return saved && saved.length <= 12 ? saved : makeRoomCode();
+  });
   const [activeMode, setActiveMode] = useState<GameMode>('drawing');
   const [selectedStageId, setSelectedStageId] = useState(stages[0]?.id ?? '');
   const [tool, setTool] = useState<Tool>('brush');
   const [color, setColor] = useState(drawingColors[0]);
-  const [size, setSize] = useState(18);
+  const [size, setSize] = useState(7);
   const [progress, setProgress] = useState(0);
-  const [players, setPlayers] = useState<Player[]>(initialPlayers);
+  const [players, setPlayers] = useState<Player[]>([]);
   const [settings, setSettings] = useState<ParentSettings>({
     requireApproval: true,
     galleryEnabled: false,
@@ -34,20 +44,30 @@ export function App() {
     timer: 5,
   });
   const [gameStarted, setGameStarted] = useState(false);
+  const [timerStarted, setTimerStarted] = useState(false);
+  const [remainingSeconds, setRemainingSeconds] = useState(settings.timer * 60);
   const [readyForReview, setReadyForReview] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewPlayerName, setPreviewPlayerName] = useState<string | null>(null);
+  const [selectedRating, setSelectedRating] = useState(0);
+  const [winnersOpen, setWinnersOpen] = useState(false);
+  const [winnersRevealed, setWinnersRevealed] = useState(false);
+  const [parentWinnersDismissed, setParentWinnersDismissed] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [showChildTour, setShowChildTour] = useState(() => localStorage.getItem('uchi-child-tour') !== 'done');
   const [showParentTour, setShowParentTour] = useState(() => localStorage.getItem('uchi-parent-tour') !== 'done');
 
   const activeStage = stages.find((stage) => stage.id === selectedStageId) ?? stages[0];
+  const currentChildPlayer = players.find((player) => player.name.toLowerCase() === childName.toLowerCase());
+  const lessonTimeUp = gameStarted && timerStarted && remainingSeconds === 0;
+  const childWorkSubmitted = role === 'child' && Boolean(currentChildPlayer && currentChildPlayer.status !== 'drawing');
 
   const drawing = useDrawingCanvas({
     activeStageId: activeStage?.id,
+    backgroundSrc: activeStage?.src,
     color,
-    locked: settings.drawingLocked || !gameStarted,
+    locked: settings.drawingLocked || !gameStarted || readyForReview || childWorkSubmitted || lessonTimeUp,
     size,
     tool,
     onProgress: updateProgress,
@@ -56,6 +76,11 @@ export function App() {
   const previewPlayer = players.find((player) => player.name === previewPlayerName) ?? players.find((player) => player.name === childName) ?? players[0];
   const previewStage = stages.find((stage) => stage.id === previewPlayer?.stageId) ?? activeStage;
   const previewDrawing = previewPlayer?.drawingData || (previewPlayer?.name === childName ? drawing.getSnapshot() : '');
+  const everyoneRated =
+    players.length > 0 &&
+    players.every((player) => (player.rating ?? 0) > 0 && (player.status === 'approved' || player.status === 'hidden'));
+  const childShouldSeeResults = role === 'child' && lessonTimeUp;
+  const showWinnersScreen = role !== 'login' && (winnersOpen || childShouldSeeResults || (winnersRevealed && !(role === 'parent' && parentWinnersDismissed)));
 
   useEffect(() => {
     if (role === 'login' || !roomCode) return;
@@ -80,29 +105,67 @@ export function App() {
     };
   }, [role, roomCode, childName]);
 
+  useEffect(() => {
+    if (!timerStarted) {
+      setRemainingSeconds(settings.timer * 60);
+    }
+  }, [settings.timer, gameStarted, timerStarted]);
+
+  useEffect(() => {
+    if (!gameStarted || !timerStarted || remainingSeconds <= 0) return;
+
+    const id = window.setInterval(() => {
+      setRemainingSeconds((value) => Math.max(0, value - 1));
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [gameStarted, timerStarted, remainingSeconds]);
+
+  useEffect(() => {
+    if (role !== 'child' || !gameStarted || showChildTour || timerStarted) return;
+    setTimerStarted(true);
+    patchRoom({ timer_started: true });
+  }, [role, gameStarted, showChildTour, timerStarted]);
+
+  useEffect(() => {
+    if (role !== 'parent' || winnersRevealed || !lessonTimeUp || !everyoneRated) return;
+    revealWinners();
+  }, [role, winnersRevealed, lessonTimeUp, everyoneRated]);
+
   function setRoomCode(value: string) {
-    setRoomCodeState(value);
-    if (value) {
-      localStorage.setItem('uchi-room-code', value);
+    const next = value.toUpperCase();
+    setRoomCodeState(next);
+    if (next) {
+      localStorage.setItem('uchi-room-code', next);
     }
   }
 
   function applyRoom(room: RoomSnapshot) {
     setRoomCode(room.code);
     setGameStarted(room.gameStarted);
+    setTimerStarted(room.timerStarted);
+    setWinnersRevealed(room.winnersRevealed);
+    if (!room.winnersRevealed) {
+      setParentWinnersDismissed(false);
+    }
+    if (room.timerEndsAt) {
+      setRemainingSeconds(Math.max(0, Math.ceil((Date.parse(room.timerEndsAt) - Date.now()) / 1000)));
+    } else if (!room.timerStarted) {
+      setRemainingSeconds(room.settings.timer * 60);
+    }
     setSettings(room.settings);
     setActiveMode(room.activeMode);
     if (stages.some((stage) => stage.id === room.activeStageId)) {
       setSelectedStageId(room.activeStageId);
     }
-    if (room.players.length > 0) {
-      setPlayers(room.players);
-    }
+    setPlayers(room.players);
 
     const currentChild = room.players.find((player) => player.name.toLowerCase() === childName.toLowerCase());
     if (currentChild) {
       setProgress(currentChild.progress);
       setReadyForReview(currentChild.status === 'waiting');
+    } else {
+      setProgress(0);
+      setReadyForReview(false);
     }
   }
 
@@ -113,18 +176,21 @@ export function App() {
       setPlayers((current) => {
         const found = current.some((player) => player.name.toLowerCase() === childName.toLowerCase());
         const updated = current.map((player) =>
-          player.name.toLowerCase() === childName.toLowerCase() || player.id === 1
+          player.name.toLowerCase() === childName.toLowerCase()
             ? {
                 ...player,
                 name: childName,
                 progress: next,
                 status: nextStatus,
+                rating: player.rating ?? 0,
                 stageId: activeStage?.id,
                 drawingData: snapshot ?? player.drawingData,
               }
             : player,
         );
-        return found ? updated : [{ id: Date.now(), name: childName, age: 6, progress: next, status: nextStatus, stageId: activeStage?.id, drawingData: snapshot }, ...updated];
+        return found
+          ? updated
+          : [{ id: Date.now(), name: childName, age: 6, progress: next, status: nextStatus, rating: 0, stageId: activeStage?.id, drawingData: snapshot }, ...updated];
       });
       syncChildWork(next, nextStatus, snapshot);
       return next;
@@ -147,10 +213,23 @@ export function App() {
     setLoginError('');
     setLoginLoading(true);
     try {
-      const room =
-        nextRole === 'parent'
-          ? await api.hostRoom(hostName.trim() || 'Хост', roomCode.trim() || undefined)
-          : await api.childRoom(childName.trim() || 'Ребенок', roomCode.trim());
+      if (nextRole === 'parent') {
+        const loginValue = parentLogin.trim();
+        const passwordValue = parentPassword.trim();
+        const displayName = hostName.trim() || loginValue || 'Родитель';
+        const auth = parentRegistering
+          ? await api.parentRegister(loginValue, passwordValue, displayName)
+          : await api.parentLogin(loginValue, passwordValue);
+        localStorage.setItem('uchi-parent-token', auth.token);
+        localStorage.setItem('uchi-parent-login', auth.parent.login);
+        setParentToken(auth.token);
+        setHostName(auth.parent.displayName || displayName);
+        applyRoom(auth.room);
+        setRole('parent');
+        return;
+      }
+
+      const room = await api.childRoom(childName.trim() || 'Ребенок', roomCode.trim());
       applyRoom(room);
       setRole(nextRole);
     } catch (error) {
@@ -162,7 +241,7 @@ export function App() {
 
   function patchRoom(payload: Parameters<typeof api.updateRoom>[1]) {
     if (!roomCode) return;
-    void api.updateRoom(roomCode, payload).then(applyRoom).catch(() => undefined);
+    void api.updateRoom(roomCode, payload, parentToken).then(applyRoom).catch(() => undefined);
   }
 
   function setSetting<K extends keyof ParentSettings>(key: K, value: ParentSettings[K]) {
@@ -176,43 +255,104 @@ export function App() {
 
   function setApproval(status: ApprovalStatus) {
     const name = previewPlayerName ?? childName;
-    setPlayers((current) => current.map((player) => (player.name === name ? { ...player, status } : player)));
+    setPlayers((current) => current.map((player) => (player.name === name ? { ...player, status, rating: selectedRating || player.rating || 0 } : player)));
     setReadyForReview(status === 'waiting');
-    void api.updateRoomPlayer(roomCode, { child_name: name, status }).catch(() => undefined);
+    setPreviewOpen(false);
+    void api
+      .updateRoomPlayer(roomCode, { child_name: name, status, ...(selectedRating ? { rating: selectedRating } : {}) }, parentToken)
+      .then(applyRoom)
+      .catch(() => undefined);
   }
 
-  function finishDrawing() {
-    const snapshot = drawing.getSnapshot();
+  async function finishDrawing() {
+    const snapshot = await drawing.getCompositeSnapshot();
     const status: ApprovalStatus = settings.requireApproval ? 'waiting' : 'approved';
     const nextProgress = Math.max(progress, 90);
     setReadyForReview(status === 'waiting');
     setProgress(nextProgress);
     setPlayers((current) =>
-      current.map((player) =>
-        player.name.toLowerCase() === childName.toLowerCase() || player.id === 1
-          ? {
-              ...player,
+      current.some((player) => player.name.toLowerCase() === childName.toLowerCase())
+        ? current.map((player) =>
+            player.name.toLowerCase() === childName.toLowerCase()
+              ? {
+                  ...player,
+                  name: childName,
+                  progress: nextProgress,
+                  status,
+                  rating: player.rating ?? 0,
+                  stageId: activeStage?.id,
+                  drawingData: snapshot,
+                }
+              : player,
+          )
+        : [
+            {
+              id: Date.now(),
               name: childName,
+              age: 6,
               progress: nextProgress,
               status,
+              rating: 0,
               stageId: activeStage?.id,
               drawingData: snapshot,
-            }
-          : player,
-      ),
+            },
+            ...current,
+          ],
     );
     syncChildWork(nextProgress, status, snapshot);
-    openPreview(childName);
   }
 
   function startGame() {
     setGameStarted(true);
+    setTimerStarted(false);
+    setWinnersOpen(false);
+    setWinnersRevealed(false);
+    setParentWinnersDismissed(false);
+    setRemainingSeconds(settings.timer * 60);
     setSettings((current) => ({ ...current, drawingLocked: false }));
     patchRoom({
       active_mode: activeMode,
       active_stage_id: activeStage?.id,
       game_started: true,
       drawing_locked: false,
+      timer_started: false,
+      winners_revealed: false,
+    });
+  }
+
+  function restartGame() {
+    setGameStarted(true);
+    setTimerStarted(false);
+    setWinnersOpen(false);
+    setWinnersRevealed(false);
+    setParentWinnersDismissed(false);
+    setProgress(0);
+    setReadyForReview(false);
+    patchRoom({
+      active_mode: activeMode,
+      active_stage_id: activeStage?.id,
+      game_started: true,
+      drawing_locked: false,
+      timer_started: false,
+      winners_revealed: false,
+      reset_players: true,
+    });
+  }
+
+  function clearLesson() {
+    setGameStarted(false);
+    setTimerStarted(false);
+    setWinnersOpen(false);
+    setWinnersRevealed(false);
+    setParentWinnersDismissed(false);
+    setProgress(0);
+    setReadyForReview(false);
+    patchRoom({
+      game_started: false,
+      drawing_locked: false,
+      timer_started: false,
+      winners_revealed: false,
+      clear_drawings: true,
     });
   }
 
@@ -228,12 +368,30 @@ export function App() {
 
   function openPreview(name = childName) {
     setPreviewPlayerName(name);
+    const player = players.find((item) => item.name === name);
+    setSelectedRating(player?.rating ?? 0);
     setPreviewOpen(true);
+  }
+
+  function revealWinners() {
+    setWinnersOpen(true);
+    setWinnersRevealed(true);
+    setParentWinnersDismissed(false);
+    patchRoom({ winners_revealed: true, drawing_locked: true });
+  }
+
+  function closeParentWinners() {
+    setWinnersOpen(false);
+    setParentWinnersDismissed(true);
   }
 
   function finishChildTour() {
     localStorage.setItem('uchi-child-tour', 'done');
     setShowChildTour(false);
+    if (gameStarted && !timerStarted) {
+      setTimerStarted(true);
+      patchRoom({ timer_started: true });
+    }
   }
 
   function finishParentTour() {
@@ -250,25 +408,24 @@ export function App() {
             <span>Рисовашка</span>
           </button>
 
-          <div className="roleSwitch" aria-label="Выбор экрана">
-            <button className={role === 'child' ? 'isSelected' : ''} type="button" onClick={() => setRole('child')}>
-              Ребенок
-            </button>
-            <button className={role === 'parent' ? 'isSelected' : ''} type="button" onClick={() => setRole('parent')}>
-              Хост
+          <div className="roleSwitch" aria-label="Текущий экран">
+            <button className="isSelected" type="button">
+              {role === 'parent' ? 'Родитель' : 'Ребенок'}
             </button>
           </div>
 
-          <div className="sessionBadges">
-            <span>
-              <Clock3 size={18} />
-              {settings.timer} мин
-            </span>
+          {role === 'child' && (
+            <div className="sessionBadges">
+              <span>
+                <Clock3 size={18} />
+              {timerStarted ? `${Math.floor(remainingSeconds / 60)}:${String(remainingSeconds % 60).padStart(2, '0')}` : `${settings.timer} мин`}
+              </span>
             <span>
               <Star size={18} />
               {progress}%
             </span>
-          </div>
+            </div>
+          )}
         </header>
       )}
 
@@ -278,24 +435,43 @@ export function App() {
           error={loginError}
           hostName={hostName}
           loading={loginLoading}
+          parentLogin={parentLogin}
+          parentPassword={parentPassword}
+          parentRegistering={parentRegistering}
           roomCode={roomCode}
           onChildName={setChildName}
           onHostName={setHostName}
+          onParentLogin={setParentLogin}
+          onParentPassword={setParentPassword}
+          onParentRegistering={setParentRegistering}
           onRoomCode={setRoomCode}
           onLogin={login}
         />
       )}
 
-      {role === 'child' && (
+      {showWinnersScreen && (
+        <WinnersScreen
+          childName={childName}
+          players={players}
+          role={role}
+          stages={stages}
+          winnersBackground={winnersBackground}
+          onClose={role === 'parent' ? closeParentWinners : undefined}
+          onPreview={openPreview}
+          onRestart={role === 'parent' ? restartGame : undefined}
+        />
+      )}
+
+      {role === 'child' && !showWinnersScreen && (
         <DrawingScreen
           {...drawing}
           activeStage={activeStage}
           childName={childName}
           color={color}
-          drawingLocked={settings.drawingLocked || !gameStarted}
+          drawingLocked={settings.drawingLocked || !gameStarted || readyForReview || childWorkSubmitted || lessonTimeUp}
           gameStarted={gameStarted}
           progress={progress}
-          readyForReview={readyForReview}
+          readyForReview={readyForReview || childWorkSubmitted}
           size={size}
           soundEnabled={settings.soundEnabled}
           tool={tool}
@@ -308,7 +484,7 @@ export function App() {
         />
       )}
 
-      {role === 'parent' && (
+      {role === 'parent' && !showWinnersScreen && (
         <ParentDashboard
           activeStage={activeStage}
           activeMode={activeMode}
@@ -329,6 +505,12 @@ export function App() {
           onSound={(value) => setSetting('soundEnabled', value)}
           onStage={changeStage}
           onStart={startGame}
+          onRestart={restartGame}
+          onClearLesson={clearLesson}
+          onShowWinners={() => {
+            setParentWinnersDismissed(false);
+            setWinnersOpen(true);
+          }}
           onTimer={(value) => setSetting('timer', value)}
           onShowHelp={() => setShowParentTour(true)}
         />
@@ -358,6 +540,21 @@ export function App() {
               <strong>{previewPlayer?.name ?? childName}</strong>
               <span>{previewPlayer?.progress ?? progress}% готово</span>
             </div>
+            {role === 'parent' && (
+              <>
+            <div className="ratingRow" aria-label="Оценка звездами">
+              {[1, 2, 3, 4, 5].map((rating) => (
+                <button
+                  key={rating}
+                  className={rating <= selectedRating ? 'starButton isSelected' : 'starButton'}
+                  type="button"
+                  onClick={() => setSelectedRating(rating)}
+                  aria-label={`${rating} звезд`}
+                >
+                  <Star size={24} fill="currentColor" />
+                </button>
+              ))}
+            </div>
             <div className="approvalActions">
               <button className="primaryButton" type="button" onClick={() => setApproval('approved')}>
                 Одобрить
@@ -366,6 +563,14 @@ export function App() {
                 Скрыть
               </button>
             </div>
+              </>
+            )}
+            {role !== 'parent' && (
+              <div className="childPreviewResult">
+                <strong>{(previewPlayer?.rating ?? 0) > 0 ? 'Оценка родителя' : 'Работа отправлена'}</strong>
+                <span>{(previewPlayer?.rating ?? 0) > 0 ? `${previewPlayer?.rating} из 5` : 'Оценка появится после проверки родителем.'}</span>
+              </div>
+            )}
           </section>
         </div>
       )}

@@ -6,9 +6,15 @@ type LoginGateProps = {
   error?: string;
   hostName: string;
   loading?: boolean;
+  parentLogin: string;
+  parentPassword: string;
+  parentRegistering: boolean;
   roomCode: string;
   onChildName: (value: string) => void;
   onHostName: (value: string) => void;
+  onParentLogin: (value: string) => void;
+  onParentPassword: (value: string) => void;
+  onParentRegistering: (value: boolean) => void;
   onRoomCode: (value: string) => void;
   onLogin: (role: Exclude<Role, 'login'>) => void | Promise<void>;
 };
@@ -18,9 +24,15 @@ export function LoginGate({
   error,
   hostName,
   loading = false,
+  parentLogin,
+  parentPassword,
+  parentRegistering,
   roomCode,
   onChildName,
   onHostName,
+  onParentLogin,
+  onParentPassword,
+  onParentRegistering,
   onRoomCode,
   onLogin,
 }: LoginGateProps) {
@@ -29,7 +41,7 @@ export function LoginGate({
       <div className="loginHero">
         <p className="eyebrow">Вход в занятие</p>
         <h1>Кто сегодня рисует?</h1>
-        <p>Хост открывает комнату по своему имени и UUID, дети входят в ту же комнату по имени.</p>
+        <p>Родитель открывает комнату по своему имени и коду, дети входят в ту же комнату по имени.</p>
         {error && (
           <div className="loginError" role="alert">
             {error}
@@ -57,9 +69,25 @@ export function LoginGate({
 
         <article className="loginCard host">
           <ShieldCheck size={34} />
-          <h2>Хост</h2>
+          <h2>Родитель</h2>
+          <div className="authModeSwitch" aria-label="Режим входа родителя">
+            <button className={!parentRegistering ? 'isSelected' : ''} type="button" onClick={() => onParentRegistering(false)}>
+              Войти
+            </button>
+            <button className={parentRegistering ? 'isSelected' : ''} type="button" onClick={() => onParentRegistering(true)}>
+              Регистрация
+            </button>
+          </div>
           <label>
-            <span>Логин хоста</span>
+            <span>Логин аккаунта</span>
+            <input value={parentLogin} onChange={(event) => onParentLogin(event.target.value)} placeholder="email или имя" />
+          </label>
+          <label>
+            <span>Пароль</span>
+            <input value={parentPassword} onChange={(event) => onParentPassword(event.target.value)} placeholder="Минимум 4 символа" type="password" />
+          </label>
+          <label>
+            <span>Имя на занятии</span>
             <input value={hostName} onChange={(event) => onHostName(event.target.value)} placeholder="Например, Светлана" />
           </label>
           <div className="qrCard compact">
@@ -69,7 +97,7 @@ export function LoginGate({
           </div>
           <button className="secondaryButton" type="button" onClick={() => onLogin('parent')} disabled={loading}>
             <ShieldCheck size={20} />
-            {loading ? 'Открываем...' : 'Открыть панель'}
+            {loading ? 'Открываем...' : parentRegistering ? 'Создать аккаунт' : 'Войти в панель'}
           </button>
         </article>
       </div>

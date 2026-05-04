@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import sqlite3
 from pathlib import Path
 
-DB_PATH = Path(__file__).resolve().parent.parent / "uchi_game.sqlite3"
+DB_PATH = Path(os.getenv("UCHI_DB_PATH", Path(__file__).resolve().parent.parent / "uchi_game.sqlite3"))
 
 TITLES_BY_LEVEL = ["Юный художник", "Искатель звезд", "Мастер бумаги", "Герой историй"]
 
@@ -59,6 +60,21 @@ def init_db() -> None:
               FOREIGN KEY(user_id) REFERENCES users(id)
             );
 
+            CREATE TABLE IF NOT EXISTS parent_accounts (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              login TEXT NOT NULL UNIQUE COLLATE NOCASE,
+              display_name TEXT NOT NULL,
+              password_hash TEXT NOT NULL,
+              created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS parent_sessions (
+              token TEXT PRIMARY KEY,
+              parent_id INTEGER NOT NULL,
+              created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              FOREIGN KEY(parent_id) REFERENCES parent_accounts(id)
+            );
+
             CREATE TABLE IF NOT EXISTS drawings (
               id TEXT PRIMARY KEY,
               title TEXT NOT NULL,
@@ -104,17 +120,22 @@ def init_db() -> None:
 
             CREATE TABLE IF NOT EXISTS rooms (
               code TEXT PRIMARY KEY,
+              parent_id INTEGER,
               host_name TEXT NOT NULL,
               active_mode TEXT NOT NULL DEFAULT 'drawing',
               active_stage_id TEXT NOT NULL DEFAULT 'forest',
               game_started INTEGER NOT NULL DEFAULT 0,
               drawing_locked INTEGER NOT NULL DEFAULT 0,
+              timer_started INTEGER NOT NULL DEFAULT 0,
+              timer_started_at TEXT,
+              winners_revealed INTEGER NOT NULL DEFAULT 0,
               require_approval INTEGER NOT NULL DEFAULT 1,
               gallery_enabled INTEGER NOT NULL DEFAULT 0,
               sound_enabled INTEGER NOT NULL DEFAULT 1,
               timer INTEGER NOT NULL DEFAULT 5,
               updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-              created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+              created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              FOREIGN KEY(parent_id) REFERENCES parent_accounts(id)
             );
 
             CREATE TABLE IF NOT EXISTS room_players (
@@ -122,6 +143,7 @@ def init_db() -> None:
               child_name TEXT NOT NULL,
               progress INTEGER NOT NULL DEFAULT 0,
               status TEXT NOT NULL DEFAULT 'drawing',
+              rating INTEGER NOT NULL DEFAULT 0,
               stage_id TEXT NOT NULL DEFAULT 'forest',
               drawing_data TEXT,
               updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -166,13 +188,27 @@ def init_db() -> None:
 
 def ensure_room_tables(db: sqlite3.Connection) -> None:
     room_columns = {row["name"] for row in db.execute("PRAGMA table_info(rooms)").fetchall()}
+    if room_columns and "parent_id" not in room_columns:
+        db.execute("ALTER TABLE rooms ADD COLUMN parent_id INTEGER")
+        room_columns.add("parent_id")
+    if room_columns and "winners_revealed" not in room_columns:
+        db.execute("ALTER TABLE rooms ADD COLUMN winners_revealed INTEGER NOT NULL DEFAULT 0")
+        room_columns.add("winners_revealed")
+    if room_columns and "timer_started_at" not in room_columns:
+        db.execute("ALTER TABLE rooms ADD COLUMN timer_started_at TEXT")
+        room_columns.add("timer_started_at")
+
     required_room_columns = {
         "code",
+        "parent_id",
         "host_name",
         "active_mode",
         "active_stage_id",
         "game_started",
         "drawing_locked",
+        "timer_started",
+        "timer_started_at",
+        "winners_revealed",
         "require_approval",
         "gallery_enabled",
         "sound_enabled",
@@ -184,23 +220,28 @@ def ensure_room_tables(db: sqlite3.Connection) -> None:
             """
             CREATE TABLE rooms (
               code TEXT PRIMARY KEY,
+              parent_id INTEGER,
               host_name TEXT NOT NULL,
               active_mode TEXT NOT NULL DEFAULT 'drawing',
               active_stage_id TEXT NOT NULL DEFAULT 'forest',
               game_started INTEGER NOT NULL DEFAULT 0,
               drawing_locked INTEGER NOT NULL DEFAULT 0,
+              timer_started INTEGER NOT NULL DEFAULT 0,
+              timer_started_at TEXT,
+              winners_revealed INTEGER NOT NULL DEFAULT 0,
               require_approval INTEGER NOT NULL DEFAULT 1,
               gallery_enabled INTEGER NOT NULL DEFAULT 0,
               sound_enabled INTEGER NOT NULL DEFAULT 1,
               timer INTEGER NOT NULL DEFAULT 5,
               updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-              created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+              created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              FOREIGN KEY(parent_id) REFERENCES parent_accounts(id)
             )
             """
         )
 
     player_columns = {row["name"] for row in db.execute("PRAGMA table_info(room_players)").fetchall()}
-    required_player_columns = {"room_code", "child_name", "progress", "status", "stage_id", "drawing_data"}
+    required_player_columns = {"room_code", "child_name", "progress", "status", "rating", "stage_id", "drawing_data"}
     if not required_player_columns.issubset(player_columns):
         db.execute("DROP TABLE IF EXISTS room_players")
         db.execute(
@@ -210,6 +251,7 @@ def ensure_room_tables(db: sqlite3.Connection) -> None:
               child_name TEXT NOT NULL,
               progress INTEGER NOT NULL DEFAULT 0,
               status TEXT NOT NULL DEFAULT 'drawing',
+              rating INTEGER NOT NULL DEFAULT 0,
               stage_id TEXT NOT NULL DEFAULT 'forest',
               drawing_data TEXT,
               updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,

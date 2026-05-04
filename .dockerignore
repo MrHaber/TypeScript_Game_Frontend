@@ -1,0 +1,10 @@
+node_modules/
+dist/
+logs/
+.git/
+.env
+.env.local
+*.log
+*.tsbuildinfo
+backend/
+Примеры/
