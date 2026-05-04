@@ -101,6 +101,73 @@ li {
   box-shadow: var(--shadow);
 }
 
+.loginLayout {
+  display: grid;
+  gap: 22px;
+  width: min(980px, 100%);
+  margin: 0 auto;
+  padding-top: min(8vh, 72px);
+}
+
+.loginHero,
+.loginCard {
+  border-radius: 30px;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+.loginHero {
+  display: grid;
+  gap: 10px;
+  padding: 28px;
+}
+
+.loginHero p:not(.eyebrow) {
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+.loginCards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.loginCard {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  padding: 22px;
+}
+
+.loginCard > svg {
+  color: var(--purple);
+}
+
+.loginCard label {
+  display: grid;
+  gap: 8px;
+  font-weight: 950;
+}
+
+.loginCard input {
+  width: 100%;
+  min-height: 56px;
+  padding: 0 16px;
+  border: 2px solid var(--line);
+  border-radius: 20px;
+  outline: none;
+  background: #f8f7ff;
+  color: var(--ink);
+  font-weight: 850;
+}
+
+.loginCard input:focus {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 4px var(--purple-soft);
+}
+
 .brandButton {
   display: inline-flex;
   align-items: center;
@@ -530,9 +597,32 @@ li {
 }
 
 .stageList,
-.playerList {
+.playerList,
+.modeList {
   display: grid;
   gap: 10px;
+}
+
+.modeCard {
+  display: grid;
+  gap: 6px;
+  min-height: 86px;
+  padding: 14px;
+  border: 2px solid var(--line);
+  border-radius: 22px;
+  background: #fff;
+  color: var(--ink);
+  text-align: left;
+}
+
+.modeCard.isSelected {
+  border-color: var(--purple);
+  background: var(--purple-soft);
+}
+
+.modeCard small {
+  color: var(--muted);
+  line-height: 1.3;
 }
 
 .stageCard {
@@ -664,8 +754,114 @@ li {
 
 .approvalActions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+
+.approvalActions:has(.secondaryButton) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.roomSummary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+
+.qrCard.compact {
+  min-width: 160px;
+}
+
+.reviewNotice {
+  min-height: 44px;
+  padding: 12px 14px;
+  border-radius: 20px;
+  background: #f8f7ff;
+  color: var(--muted);
+  font-weight: 950;
+}
+
+.reviewNotice.isReady {
+  background: #e7f6db;
+  color: #31720b;
+}
+
+.readyRibbon {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 16px;
+  border-radius: 26px;
+  background: #e7f6db;
+  color: #31720b;
+  font-size: 17px;
+  font-weight: 950;
+  box-shadow: var(--shadow);
+  pointer-events: none;
+}
+
+.previewBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 28;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(37, 37, 61, 0.34);
+}
+
+.previewModal {
+  display: grid;
+  gap: 14px;
+  width: min(760px, 100%);
+  padding: 20px;
+  border-radius: 30px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(37, 37, 61, 0.28);
+}
+
+.previewStage {
+  position: relative;
+  min-height: 420px;
+  overflow: hidden;
+  border-radius: 24px;
+  background: #f8f7ff;
+}
+
+.previewStage img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.previewPaper {
+  position: absolute;
+  inset: 12%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  border-radius: 42% 58% 54% 46% / 45% 45% 55% 55%;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--ink);
+  text-align: center;
+}
+
+.previewPaper strong {
+  font-size: 28px;
+}
+
+.previewPaper span {
+  color: var(--muted);
+  font-weight: 850;
 }
 
 .tourBackdrop {
@@ -776,7 +972,9 @@ li {
   .taskBubble,
   .progressRow,
   .stageCard,
-  .playerList article {
+  .playerList article,
+  .loginCards,
+  .roomSummary {
     grid-template-columns: 1fr;
   }
 
