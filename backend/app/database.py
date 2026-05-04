@@ -101,6 +101,44 @@ def init_db() -> None:
               require_export_approval INTEGER NOT NULL DEFAULT 1,
               FOREIGN KEY(user_id) REFERENCES users(id)
             );
+
+            CREATE TABLE IF NOT EXISTS rooms (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              code TEXT NOT NULL UNIQUE COLLATE NOCASE,
+              host_name TEXT NOT NULL,
+              mode TEXT NOT NULL DEFAULT 'drawing',
+              timer INTEGER NOT NULL DEFAULT 5,
+              stage_id TEXT NOT NULL DEFAULT 'forest',
+              started INTEGER NOT NULL DEFAULT 0,
+              locked INTEGER NOT NULL DEFAULT 0,
+              created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS room_players (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              room_id INTEGER NOT NULL,
+              child_name TEXT NOT NULL,
+              age INTEGER NOT NULL DEFAULT 6,
+              progress INTEGER NOT NULL DEFAULT 0,
+              status TEXT NOT NULL DEFAULT 'waiting',
+              joined_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              UNIQUE(room_id, child_name),
+              FOREIGN KEY(room_id) REFERENCES rooms(id)
+            );
+
+            CREATE TABLE IF NOT EXISTS room_drawings (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              room_id INTEGER NOT NULL,
+              player_id INTEGER,
+              child_name TEXT NOT NULL,
+              stage_id TEXT NOT NULL,
+              image_data TEXT NOT NULL,
+              progress INTEGER NOT NULL DEFAULT 0,
+              status TEXT NOT NULL DEFAULT 'waiting',
+              created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              FOREIGN KEY(room_id) REFERENCES rooms(id),
+              FOREIGN KEY(player_id) REFERENCES room_players(id)
+            );
             """
         )
 

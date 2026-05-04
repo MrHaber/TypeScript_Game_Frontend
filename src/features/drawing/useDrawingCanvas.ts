@@ -8,10 +8,29 @@ type UseDrawingCanvasOptions = {
   tool: Tool;
   locked: boolean;
   activeStageId?: string;
+  backgroundSrc?: string;
   onProgress: (delta: number) => void;
 };
 
-export function useDrawingCanvas({ color, size, tool, locked, activeStageId, onProgress }: UseDrawingCanvasOptions) {
+function loadImage(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new window.Image();
+    image.crossOrigin = 'anonymous';
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = src;
+  });
+}
+
+export function useDrawingCanvas({
+  color,
+  size,
+  tool,
+  locked,
+  activeStageId,
+  backgroundSrc,
+  onProgress,
+}: UseDrawingCanvasOptions) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawingRef = useRef(false);
   const historyRef = useRef<string[]>([]);
@@ -20,21 +39,22 @@ export function useDrawingCanvas({ color, size, tool, locked, activeStageId, onP
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    if (!canvasRef.current) return;
-
     const canvas = canvasRef.current;
-    const resize = () => {
+    if (!canvas) return;
+
+    historyRef.current = [];
+    setHistoryCount(0);
+    setSaved(false);
+
+    const resize = (preserve = false) => {
       const rect = canvas.getBoundingClientRect();
       const ratio = window.devicePixelRatio || 1;
       const width = Math.max(1, Math.round(rect.width * ratio));
       const height = Math.max(1, Math.round(rect.height * ratio));
-      const shouldResize = canvas.width !== width || canvas.height !== height;
-      const snapshot = shouldResize && canvas.width > 1 && canvas.height > 1 ? canvas.toDataURL() : '';
+      const snapshot = preserve && canvas.width > 1 && canvas.height > 1 ? canvas.toDataURL() : '';
 
-      if (shouldResize) {
-        canvas.width = width;
-        canvas.height = height;
-      }
+      canvas.width = width;
+      canvas.height = height;
 
       const context = canvas.getContext('2d');
       if (!context) return;
@@ -42,6 +62,7 @@ export function useDrawingCanvas({ color, size, tool, locked, activeStageId, onP
       context.setTransform(ratio, 0, 0, ratio, 0, 0);
       context.lineCap = 'round';
       context.lineJoin = 'round';
+      context.clearRect(0, 0, rect.width, rect.height);
 
       if (snapshot) {
         const image = new window.Image();
@@ -50,8 +71,8 @@ export function useDrawingCanvas({ color, size, tool, locked, activeStageId, onP
       }
     };
 
-    const observer = new ResizeObserver(resize);
-    resize();
+    const observer = new ResizeObserver(() => resize(true));
+    resize(false);
     observer.observe(canvas);
     return () => observer.disconnect();
   }, [activeStageId]);
@@ -109,10 +130,11 @@ export function useDrawingCanvas({ color, size, tool, locked, activeStageId, onP
     const last = historyRef.current[historyRef.current.length - 1];
     if (!canvas || !context || !last) return;
 
+    const ratio = window.devicePixelRatio || 1;
     const image = new window.Image();
     image.onload = () => {
-      context.clearRect(0, 0, canvas.width, canvas.height);
-      context.drawImage(image, 0, 0, canvas.width / (window.devicePixelRatio || 1), canvas.height / (window.devicePixelRatio || 1));
+      context.clearRect(0, 0, canvas.width / ratio, canvas.height / ratio);
+      context.drawImage(image, 0, 0, canvas.width / ratio, canvas.height / ratio);
     };
     image.src = last;
     historyRef.current = historyRef.current.slice(0, -1);
@@ -126,19 +148,49 @@ export function useDrawingCanvas({ color, size, tool, locked, activeStageId, onP
     const context = canvas?.getContext('2d');
     if (!canvas || !context) return;
 
+    const ratio = window.devicePixelRatio || 1;
     historyRef.current = [...historyRef.current.slice(-9), canvas.toDataURL()];
     setHistoryCount(historyRef.current.length);
-    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.clearRect(0, 0, canvas.width / ratio, canvas.height / ratio);
     onProgress(-100);
     setSaved(false);
   }
 
-  function downloadDrawing() {
+  async function getComposedDataUrl() {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) return null;
+
+    const rect = canvas.getBoundingClientRect();
+    const ratio = window.devicePixelRatio || 1;
+    const output = document.createElement('canvas');
+    output.width = Math.max(1, Math.round(rect.width * ratio));
+    output.height = Math.max(1, Math.round(rect.height * ratio));
+    const context = output.getContext('2d');
+    if (!context) return canvas.toDataURL('image/png');
+
+    if (backgroundSrc) {
+      try {
+        const background = await loadImage(backgroundSrc);
+        context.drawImage(background, 0, 0, output.width, output.height);
+      } catch {
+        context.fillStyle = '#ffffff';
+        context.fillRect(0, 0, output.width, output.height);
+      }
+    } else {
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, output.width, output.height);
+    }
+
+    context.drawImage(canvas, 0, 0, output.width, output.height);
+    return output.toDataURL('image/png');
+  }
+
+  async function downloadDrawing() {
+    const imageData = await getComposedDataUrl();
+    if (!imageData) return;
 
     const link = document.createElement('a');
-    link.href = canvas.toDataURL('image/png');
+    link.href = imageData;
     link.download = 'uchi-drawing.png';
     link.click();
     setSaved(true);
@@ -154,5 +206,6 @@ export function useDrawingCanvas({ color, size, tool, locked, activeStageId, onP
     undo,
     clearCanvas,
     downloadDrawing,
+    getComposedDataUrl,
   };
 }

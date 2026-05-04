@@ -1,12 +1,27 @@
 import { useMemo, useState } from 'react';
 import { Clock3, Eye, Star } from 'lucide-react';
 import { TourCard } from './components/TourCard';
+import { api, type RoomDto } from './api/client';
 import { LoginGate } from './features/auth/LoginGate';
 import { buildStages, drawingColors, initialPlayers } from './features/drawing/data';
 import { DrawingScreen } from './features/drawing/DrawingScreen';
-import type { ApprovalStatus, GameMode, ParentSettings, Role, Tool } from './features/drawing/types';
+import type { ApprovalStatus, GameMode, ParentSettings, Player, Role, Tool } from './features/drawing/types';
 import { useDrawingCanvas } from './features/drawing/useDrawingCanvas';
 import { ParentDashboard } from './features/parent/ParentDashboard';
+
+function roomPlayersToUi(room: RoomDto, fallbackName: string): Player[] {
+  if (room.players.length === 0) {
+    return initialPlayers.map((player, index) => (index === 0 ? { ...player, name: fallbackName } : player));
+  }
+
+  return room.players.map((player) => ({
+    id: player.id,
+    name: player.child_name,
+    age: player.age,
+    progress: player.progress,
+    status: player.status,
+  }));
+}
 
 export function App() {
   const stages = useMemo(buildStages, []);
@@ -20,7 +35,7 @@ export function App() {
   const [color, setColor] = useState(drawingColors[0]);
   const [size, setSize] = useState(18);
   const [progress, setProgress] = useState(0);
-  const [players, setPlayers] = useState(initialPlayers);
+  const [players, setPlayers] = useState<Player[]>(initialPlayers);
   const [settings, setSettings] = useState<ParentSettings>({
     requireApproval: true,
     galleryEnabled: false,
@@ -31,6 +46,10 @@ export function App() {
   const [gameStarted, setGameStarted] = useState(false);
   const [readyForReview, setReadyForReview] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [savedDrawingUrl, setSavedDrawingUrl] = useState('');
+  const [roomPlayerId, setRoomPlayerId] = useState<number | null>(null);
+  const [roomDrawingId, setRoomDrawingId] = useState<number | null>(null);
+  const [apiMessage, setApiMessage] = useState('');
   const [showChildTour, setShowChildTour] = useState(() => localStorage.getItem('uchi-child-tour') !== 'done');
   const [showParentTour, setShowParentTour] = useState(() => localStorage.getItem('uchi-parent-tour') !== 'done');
 
@@ -38,19 +57,46 @@ export function App() {
 
   const drawing = useDrawingCanvas({
     activeStageId: activeStage?.id,
+    backgroundSrc: activeStage?.src,
     color,
-    locked: settings.drawingLocked || !gameStarted,
+    locked: settings.drawingLocked,
     size,
     tool,
     onProgress: updateProgress,
   });
+
+  function applyRoom(room: RoomDto, fallbackName = childName) {
+    setRoomCode(room.code);
+    setActiveMode((room.mode as GameMode) || 'drawing');
+    setSelectedStageId(room.stage_id || stages[0]?.id || '');
+    setGameStarted(room.started);
+    setSettings((current) => ({
+      ...current,
+      drawingLocked: room.locked,
+      timer: room.timer,
+    }));
+    setPlayers(roomPlayersToUi(room, fallbackName));
+
+    const currentPlayer = room.players.find((player) => player.child_name.toLowerCase() === fallbackName.toLowerCase());
+    if (currentPlayer) {
+      setRoomPlayerId(currentPlayer.id);
+      setProgress(currentPlayer.progress);
+    }
+
+    const latestDrawing = room.drawings[room.drawings.length - 1];
+    if (latestDrawing) {
+      setRoomDrawingId(latestDrawing.id);
+      setSavedDrawingUrl(latestDrawing.image_data);
+      setReadyForReview(latestDrawing.status === 'waiting');
+    }
+  }
 
   function updateProgress(delta: number) {
     setProgress((value) => {
       const next = delta <= -100 ? 0 : Math.max(0, Math.min(100, value + delta));
       setPlayers((current) =>
         current.map((player, index) =>
-          index === 0
+          (roomPlayerId ? player.id === roomPlayerId : index === 0)
             ? {
                 ...player,
                 name: childName,
@@ -64,43 +110,141 @@ export function App() {
     });
   }
 
-  function login(nextRole: Exclude<Role, 'login'>) {
-    setPlayers((current) => current.map((player, index) => (index === 0 ? { ...player, name: childName } : player)));
-    setRole(nextRole);
+  async function copyInvite() {
+    try {
+      await navigator.clipboard.writeText(roomCode);
+      setApiMessage(`Код ${roomCode} скопирован`);
+    } catch {
+      setApiMessage(`Код комнаты: ${roomCode}`);
+    }
+  }
+
+  async function login(nextRole: Exclude<Role, 'login'>) {
+    setApiMessage(nextRole === 'parent' ? 'Создаю комнату...' : 'Подключаю к комнате...');
+
+    try {
+      if (nextRole === 'parent') {
+        const room = await api.createRoom({
+          hostName,
+          mode: activeMode,
+          timer: settings.timer,
+          stageId: selectedStageId,
+        });
+        applyRoom(room);
+        setApiMessage(`Комната ${room.code} создана`);
+        setRole('parent');
+        return;
+      }
+
+      const room = await api.joinRoom(roomCode, { childName, age: 6 });
+      applyRoom(room, childName);
+      setApiMessage(`Вход в комнату ${room.code} выполнен`);
+      setRole('child');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Не удалось связаться с бекендом';
+      setApiMessage(message);
+    }
+  }
+
+  async function updateRoomPatch(patch: Parameters<typeof api.updateRoom>[1]) {
+    try {
+      const room = await api.updateRoom(roomCode, patch);
+      applyRoom(room);
+      setApiMessage('Комната обновлена');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Комната обновлена только на экране';
+      setApiMessage(message);
+    }
   }
 
   function setSetting<K extends keyof ParentSettings>(key: K, value: ParentSettings[K]) {
     setSettings((current) => ({ ...current, [key]: value }));
+    if (key === 'drawingLocked') void updateRoomPatch({ locked: Boolean(value) });
+    if (key === 'timer') void updateRoomPatch({ timer: Number(value) });
   }
 
-  function setApproval(status: ApprovalStatus) {
-    setPlayers((current) => current.map((player, index) => (index === 0 ? { ...player, status } : player)));
+  async function setApproval(status: ApprovalStatus) {
+    setPlayers((current) =>
+      current.map((player, index) => ((roomPlayerId ? player.id === roomPlayerId : index === 0) ? { ...player, status } : player)),
+    );
     setReadyForReview(status === 'waiting');
+
+    if (!roomDrawingId) return;
+    try {
+      const room = await api.updateRoomDrawing(roomCode, roomDrawingId, status);
+      applyRoom(room);
+      setApiMessage(status === 'approved' ? 'Рисунок одобрен' : status === 'hidden' ? 'Рисунок скрыт' : 'Рисунок ждет проверки');
+    } catch (error) {
+      setApiMessage(error instanceof Error ? error.message : 'Не удалось обновить статус рисунка');
+    }
   }
 
-  function finishDrawing() {
-    setReadyForReview(true);
+  async function finishDrawing() {
+    const imageData = await drawing.getComposedDataUrl();
+    const nextStatus: ApprovalStatus = settings.requireApproval ? 'waiting' : 'approved';
+    const nextProgress = Math.max(progress, 90);
+
+    if (imageData) setSavedDrawingUrl(imageData);
+    setReadyForReview(nextStatus === 'waiting');
     setPlayers((current) =>
       current.map((player, index) =>
-        index === 0
+        (roomPlayerId ? player.id === roomPlayerId : index === 0)
           ? {
               ...player,
               name: childName,
-              progress: Math.max(progress, 90),
-              status: settings.requireApproval ? 'waiting' : 'approved',
+              progress: nextProgress,
+              status: nextStatus,
             }
           : player,
       ),
     );
-    setProgress((value) => Math.max(value, 90));
+    setProgress(nextProgress);
+
+    if (imageData) {
+      try {
+        const room = await api.saveRoomDrawing(roomCode, {
+          playerId: roomPlayerId,
+          childName,
+          stageId: activeStage?.id ?? selectedStageId,
+          imageData,
+          progress: nextProgress,
+          status: nextStatus,
+        });
+        applyRoom(room, childName);
+        setApiMessage('Рисунок сохранен на бекенд');
+      } catch (error) {
+        setApiMessage(error instanceof Error ? error.message : 'Рисунок сохранен только в браузере');
+      }
+    }
+
     setRole('parent');
     setPreviewOpen(true);
   }
 
-  function startGame() {
+  async function startGame() {
     setGameStarted(true);
     setSettings((current) => ({ ...current, drawingLocked: false }));
+    await updateRoomPatch({
+      started: true,
+      locked: false,
+      mode: activeMode,
+      timer: settings.timer,
+      stageId: selectedStageId,
+    });
     setRole('child');
+  }
+
+  function changeMode(mode: GameMode) {
+    setActiveMode(mode);
+    void updateRoomPatch({ mode });
+  }
+
+  function changeStage(stageId: string) {
+    setSelectedStageId(stageId);
+    setProgress(0);
+    setReadyForReview(false);
+    setSavedDrawingUrl('');
+    void updateRoomPatch({ stageId });
   }
 
   function finishChildTour() {
@@ -119,7 +263,7 @@ export function App() {
         <header className="topbar">
           <button className="brandButton" type="button" onClick={() => setRole('login')}>
             <span className="brandMark">У</span>
-            <span>Рисовашка</span>
+            <span>Учи.ру Рисовашка</span>
           </button>
 
           <div className="roleSwitch" aria-label="Выбор экрана">
@@ -127,7 +271,7 @@ export function App() {
               Ребенок
             </button>
             <button className={role === 'parent' ? 'isSelected' : ''} type="button" onClick={() => setRole('parent')}>
-              Хост
+              Взрослый
             </button>
           </div>
 
@@ -149,10 +293,12 @@ export function App() {
           childName={childName}
           hostName={hostName}
           roomCode={roomCode}
+          statusText={apiMessage}
           onChildName={setChildName}
           onHostName={setHostName}
           onRoomCode={setRoomCode}
           onLogin={login}
+          onCopyRoom={copyInvite}
         />
       )}
 
@@ -162,7 +308,7 @@ export function App() {
           activeStage={activeStage}
           childName={childName}
           color={color}
-          drawingLocked={settings.drawingLocked || !gameStarted}
+          drawingLocked={settings.drawingLocked}
           gameStarted={gameStarted}
           progress={progress}
           readyForReview={readyForReview}
@@ -187,22 +333,26 @@ export function App() {
           players={players}
           readyForReview={readyForReview}
           roomCode={roomCode}
+          savedDrawingUrl={savedDrawingUrl}
           settings={settings}
           stages={stages}
-          onApprove={() => setApproval('approved')}
+          onApprove={() => void setApproval('approved')}
+          onCopyInvite={copyInvite}
           onGallery={(value) => setSetting('galleryEnabled', value)}
-          onHide={() => setApproval('hidden')}
+          onHide={() => void setApproval('hidden')}
           onLock={(value) => setSetting('drawingLocked', value)}
-          onMode={setActiveMode}
+          onMode={changeMode}
           onPreview={() => setPreviewOpen(true)}
           onRequireApproval={(value) => setSetting('requireApproval', value)}
           onSound={(value) => setSetting('soundEnabled', value)}
-          onStage={setSelectedStageId}
+          onStage={changeStage}
           onStart={startGame}
           onTimer={(value) => setSetting('timer', value)}
           onShowHelp={() => setShowParentTour(true)}
         />
       )}
+
+      {apiMessage && role !== 'login' && <div className="floatingNotice">{apiMessage}</div>}
 
       {previewOpen && (
         <div className="previewBackdrop">
@@ -214,17 +364,23 @@ export function App() {
               </button>
             </div>
             <div className="previewStage">
-              {activeStage?.src && <img src={activeStage.src} alt={activeStage.title} />}
-              <div className="previewPaper">
-                <strong>{childName}</strong>
-                <span>{readyForReview ? 'Работа отправлена хосту' : 'Черновик рисунка'}</span>
-              </div>
+              {savedDrawingUrl ? (
+                <img className="savedDrawingImage" src={savedDrawingUrl} alt="Сохраненный рисунок ребенка" />
+              ) : (
+                activeStage?.src && <img src={activeStage.src} alt={activeStage.title} />
+              )}
+              {!savedDrawingUrl && (
+                <div className="previewPaper">
+                  <strong>{childName}</strong>
+                  <span>{readyForReview ? 'Работа отправлена взрослому' : 'Черновик рисунка'}</span>
+                </div>
+              )}
             </div>
             <div className="approvalActions">
-              <button className="primaryButton" type="button" onClick={() => setApproval('approved')}>
+              <button className="primaryButton" type="button" onClick={() => void setApproval('approved')}>
                 Одобрить
               </button>
-              <button className="dangerButton" type="button" onClick={() => setApproval('hidden')}>
+              <button className="dangerButton" type="button" onClick={() => void setApproval('hidden')}>
                 Скрыть
               </button>
             </div>

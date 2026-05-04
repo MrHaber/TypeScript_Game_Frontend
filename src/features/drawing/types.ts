@@ -40,7 +40,8 @@ export type DrawingHandlers = {
   stopDrawing: () => void;
   undo: () => void;
   clearCanvas: () => void;
-  downloadDrawing: () => void;
+  downloadDrawing: () => void | Promise<void>;
+  getComposedDataUrl: () => Promise<string | null>;
 };
 
 export type PanelProps = {
