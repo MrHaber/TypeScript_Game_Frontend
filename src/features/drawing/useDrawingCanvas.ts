@@ -26,27 +26,7 @@ export function useDrawingCanvas({ color, size, tool, locked, activeStageId, bac
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const resize = () => {
-      const rect = canvas.getBoundingClientRect();
-      const ratio = window.devicePixelRatio || 1;
-      const width = Math.max(1, Math.round(rect.width * ratio));
-      const height = Math.max(1, Math.round(rect.height * ratio));
-      if (canvas.width === width && canvas.height === height) return;
-
-      const snapshot = canvas.width > 1 && canvas.height > 1 ? canvas.toDataURL() : '';
-      canvas.width = width;
-      canvas.height = height;
-
-      const context = canvas.getContext('2d');
-      if (!context) return;
-      configureContext(context);
-
-      if (snapshot) {
-        const image = new window.Image();
-        image.onload = () => context.drawImage(image, 0, 0, rect.width, rect.height);
-        image.src = snapshot;
-      }
-    };
+    const resize = () => syncCanvasSize(canvas);
 
     const observer = new ResizeObserver(resize);
     resize();
@@ -54,13 +34,41 @@ export function useDrawingCanvas({ color, size, tool, locked, activeStageId, bac
     return () => observer.disconnect();
   }, [activeStageId]);
 
-  function ratio() {
-    return window.devicePixelRatio || 1;
+  function syncCanvasSize(canvas = canvasRef.current) {
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+
+    const ratio = window.devicePixelRatio || 1;
+    const width = Math.max(1, Math.round(rect.width * ratio));
+    const height = Math.max(1, Math.round(rect.height * ratio));
+    if (canvas.width === width && canvas.height === height) return;
+
+    const snapshot = canvas.width > 1 && canvas.height > 1 ? canvas.toDataURL() : '';
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    configureContext(context);
+
+    if (snapshot) {
+      const image = new window.Image();
+      image.onload = () => context.drawImage(image, 0, 0, width, height);
+      image.src = snapshot;
+    }
+  }
+
+  function canvasScale(canvas: HTMLCanvasElement) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: rect.width > 0 ? canvas.width / rect.width : 1,
+      y: rect.height > 0 ? canvas.height / rect.height : 1,
+    };
   }
 
   function configureContext(context: CanvasRenderingContext2D) {
-    const scale = ratio();
-    context.setTransform(scale, 0, 0, scale, 0, 0);
+    context.setTransform(1, 0, 0, 1, 0, 0);
     context.imageSmoothingEnabled = true;
     context.imageSmoothingQuality = 'high';
     context.lineCap = 'round';
@@ -71,24 +79,29 @@ export function useDrawingCanvas({ color, size, tool, locked, activeStageId, bac
   function getPoint(event: ReactPointerEvent<HTMLCanvasElement> | PointerEvent): Point {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
+    syncCanvasSize(canvas);
     const rect = canvas.getBoundingClientRect();
+    const scale = canvasScale(canvas);
     return {
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
+      x: (event.clientX - rect.left) * scale.x,
+      y: (event.clientY - rect.top) * scale.y,
     };
   }
 
-  function applyBrush(context: CanvasRenderingContext2D) {
+  function applyBrush(context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
     configureContext(context);
+    const scale = canvasScale(canvas);
+    const averageScale = (scale.x + scale.y) / 2;
     context.globalCompositeOperation = tool === 'eraser' ? 'destination-out' : 'source-over';
     context.strokeStyle = color;
     context.fillStyle = color;
-    context.lineWidth = tool === 'eraser' ? size * 1.7 : size;
+    context.lineWidth = (tool === 'eraser' ? size * 1.7 : size) * averageScale;
   }
 
   function startDrawing(event: ReactPointerEvent<HTMLCanvasElement>) {
     const canvas = canvasRef.current;
     if (!canvas || locked) return;
+    syncCanvasSize(canvas);
 
     event.preventDefault();
     historyRef.current = [...historyRef.current.slice(-9), canvas.toDataURL()];
@@ -118,7 +131,7 @@ export function useDrawingCanvas({ color, size, tool, locked, activeStageId, bac
     const last = lastPointRef.current;
     if (!canvas || !context || !last) return;
 
-    applyBrush(context);
+    applyBrush(context, canvas);
     const mid = {
       x: (last.x + next.x) / 2,
       y: (last.y + next.y) / 2,
@@ -135,7 +148,7 @@ export function useDrawingCanvas({ color, size, tool, locked, activeStageId, bac
     const context = canvas?.getContext('2d');
     if (!canvas || !context || !point) return;
 
-    applyBrush(context);
+    applyBrush(context, canvas);
     context.beginPath();
     context.arc(point.x, point.y, context.lineWidth / 2, 0, Math.PI * 2);
     context.fill();
@@ -171,9 +184,8 @@ export function useDrawingCanvas({ color, size, tool, locked, activeStageId, bac
     historyRef.current = historyRef.current.slice(0, -1);
     setHistoryCount(historyRef.current.length);
     image.onload = () => {
-      const rect = canvas.getBoundingClientRect();
       clearCanvasPixels(context, canvas);
-      context.drawImage(image, 0, 0, rect.width, rect.height);
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
       void getCompositeSnapshot().then((snapshot) => onProgress(-12, snapshot));
     };
     image.src = last;
@@ -193,6 +205,7 @@ export function useDrawingCanvas({ color, size, tool, locked, activeStageId, bac
   }
 
   function getSnapshot() {
+    syncCanvasSize();
     return canvasRef.current?.toDataURL('image/png') ?? '';
   }
 
@@ -220,6 +233,7 @@ export function useDrawingCanvas({ color, size, tool, locked, activeStageId, bac
   async function getCompositeSnapshot() {
     const canvas = canvasRef.current;
     if (!canvas) return '';
+    syncCanvasSize(canvas);
 
     const output = document.createElement('canvas');
     output.width = canvas.width;

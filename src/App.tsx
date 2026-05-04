@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Clock3, Eye, Star } from 'lucide-react';
 import { TourCard } from './components/TourCard';
 import { api, type RoomSnapshot } from './api/client';
@@ -15,6 +15,8 @@ function makeRoomCode() {
   const suffix = Array.from({ length: 4 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
   return `UCHI-${suffix}`;
 }
+
+const MEMORY_SECONDS = 60;
 
 export function App() {
   const stages = useMemo(buildStages, []);
@@ -46,6 +48,9 @@ export function App() {
   const [gameStarted, setGameStarted] = useState(false);
   const [timerStarted, setTimerStarted] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(settings.timer * 60);
+  const [memorySeconds, setMemorySeconds] = useState(MEMORY_SECONDS);
+  const [memoryDone, setMemoryDone] = useState(false);
+  const [localDrawingSession, setLocalDrawingSession] = useState(false);
   const [readyForReview, setReadyForReview] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewPlayerName, setPreviewPlayerName] = useState<string | null>(null);
@@ -57,17 +62,22 @@ export function App() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [showChildTour, setShowChildTour] = useState(() => localStorage.getItem('uchi-child-tour') !== 'done');
   const [showParentTour, setShowParentTour] = useState(() => localStorage.getItem('uchi-parent-tour') !== 'done');
+  const memoryRoomKeyRef = useRef('');
+  const memoryDoneRef = useRef(false);
+  const localDrawingSessionRef = useRef(false);
 
   const activeStage = stages.find((stage) => stage.id === selectedStageId) ?? stages[0];
   const currentChildPlayer = players.find((player) => player.name.toLowerCase() === childName.toLowerCase());
-  const lessonTimeUp = gameStarted && timerStarted && remainingSeconds === 0;
-  const childWorkSubmitted = role === 'child' && Boolean(currentChildPlayer && currentChildPlayer.status !== 'drawing');
+  const lessonTimeUp = gameStarted && memoryDone && timerStarted && remainingSeconds === 0;
+  const childWorkSubmitted = role === 'child' && !localDrawingSession && Boolean(currentChildPlayer && currentChildPlayer.status !== 'drawing');
+  const memoryActive = role === 'child' && gameStarted && !showChildTour && !memoryDone && !childWorkSubmitted && !lessonTimeUp;
+  const childDrawingLocked = settings.drawingLocked || !gameStarted || !memoryDone || readyForReview || childWorkSubmitted || lessonTimeUp;
 
   const drawing = useDrawingCanvas({
     activeStageId: activeStage?.id,
-    backgroundSrc: activeStage?.src,
+    backgroundSrc: undefined,
     color,
-    locked: settings.drawingLocked || !gameStarted || readyForReview || childWorkSubmitted || lessonTimeUp,
+    locked: childDrawingLocked,
     size,
     tool,
     onProgress: updateProgress,
@@ -80,7 +90,11 @@ export function App() {
     players.length > 0 &&
     players.every((player) => (player.rating ?? 0) > 0 && (player.status === 'approved' || player.status === 'hidden'));
   const childShouldSeeResults = role === 'child' && lessonTimeUp;
-  const showWinnersScreen = role !== 'login' && (winnersOpen || childShouldSeeResults || (winnersRevealed && !(role === 'parent' && parentWinnersDismissed)));
+  const blockChildWinners = role === 'child' && localDrawingSession;
+  const showWinnersScreen =
+    role !== 'login' &&
+    !blockChildWinners &&
+    (winnersOpen || childShouldSeeResults || (winnersRevealed && !(role === 'parent' && parentWinnersDismissed)));
 
   useEffect(() => {
     if (role === 'login' || !roomCode) return;
@@ -103,7 +117,7 @@ export function App() {
       cancelled = true;
       window.clearInterval(id);
     };
-  }, [role, roomCode, childName]);
+  }, [role, roomCode, childName, localDrawingSession, memoryDone]);
 
   useEffect(() => {
     if (!timerStarted) {
@@ -121,15 +135,57 @@ export function App() {
   }, [gameStarted, timerStarted, remainingSeconds]);
 
   useEffect(() => {
-    if (role !== 'child' || !gameStarted || showChildTour || timerStarted) return;
+    if (role !== 'child' || !gameStarted || showChildTour || timerStarted || !memoryDone) return;
     setTimerStarted(true);
     patchRoom({ timer_started: true });
-  }, [role, gameStarted, showChildTour, timerStarted]);
+  }, [role, gameStarted, showChildTour, timerStarted, memoryDone]);
+
+  useEffect(() => {
+    if (!memoryActive) return;
+    if (memorySeconds <= 0) {
+      completeMemoryPhase();
+      return;
+    }
+
+    const id = window.setTimeout(() => {
+      setMemorySeconds((value) => Math.max(0, value - 1));
+    }, 1000);
+    return () => window.clearTimeout(id);
+  }, [memoryActive, memorySeconds]);
 
   useEffect(() => {
     if (role !== 'parent' || winnersRevealed || !lessonTimeUp || !everyoneRated) return;
     revealWinners();
   }, [role, winnersRevealed, lessonTimeUp, everyoneRated]);
+
+  function resetMemoryPhase() {
+    memoryDoneRef.current = false;
+    localDrawingSessionRef.current = false;
+    setMemoryDone(false);
+    setLocalDrawingSession(false);
+    setMemorySeconds(MEMORY_SECONDS);
+  }
+
+  function completeMemoryPhase() {
+    memoryDoneRef.current = true;
+    localDrawingSessionRef.current = true;
+    setMemoryDone(true);
+    setLocalDrawingSession(true);
+    setReadyForReview(false);
+    setProgress(0);
+    setMemorySeconds(MEMORY_SECONDS);
+    setTimerStarted(false);
+    setRemainingSeconds(settings.timer * 60);
+    setWinnersOpen(false);
+    setWinnersRevealed(false);
+    void api.updateRoomPlayer(roomCode, {
+      child_name: childName,
+      progress: 0,
+      status: 'drawing',
+      stage_id: activeStage?.id,
+      drawing_data: '',
+    }).catch(() => undefined);
+  }
 
   function setRoomCode(value: string) {
     const next = value.toUpperCase();
@@ -140,29 +196,51 @@ export function App() {
   }
 
   function applyRoom(room: RoomSnapshot) {
+    const isLocalChildDrawing = role === 'child' && localDrawingSessionRef.current;
+    const keepLocalChildTimer = role === 'child' && room.gameStarted && memoryDoneRef.current;
     setRoomCode(room.code);
     setGameStarted(room.gameStarted);
-    setTimerStarted(room.timerStarted);
-    setWinnersRevealed(room.winnersRevealed);
+    if (!keepLocalChildTimer) {
+      setTimerStarted(room.timerStarted);
+    }
+    setWinnersRevealed(isLocalChildDrawing ? false : room.winnersRevealed);
     if (!room.winnersRevealed) {
       setParentWinnersDismissed(false);
     }
-    if (room.timerEndsAt) {
-      setRemainingSeconds(Math.max(0, Math.ceil((Date.parse(room.timerEndsAt) - Date.now()) / 1000)));
-    } else if (!room.timerStarted) {
-      setRemainingSeconds(room.settings.timer * 60);
+    if (!keepLocalChildTimer) {
+      if (room.timerEndsAt) {
+        setRemainingSeconds(Math.max(0, Math.ceil((Date.parse(room.timerEndsAt) - Date.now()) / 1000)));
+      } else if (!room.timerStarted) {
+        setRemainingSeconds(room.settings.timer * 60);
+      }
     }
     setSettings(room.settings);
     setActiveMode(room.activeMode);
     if (stages.some((stage) => stage.id === room.activeStageId)) {
       setSelectedStageId(room.activeStageId);
     }
-    setPlayers(room.players);
+    const roomPlayers =
+      isLocalChildDrawing
+        ? room.players.map((player) =>
+            player.name.toLowerCase() === childName.toLowerCase()
+              ? { ...player, status: 'drawing' as ApprovalStatus }
+              : player,
+          )
+        : room.players;
+    setPlayers(roomPlayers);
 
-    const currentChild = room.players.find((player) => player.name.toLowerCase() === childName.toLowerCase());
+    const currentChild = roomPlayers.find((player) => player.name.toLowerCase() === childName.toLowerCase());
+    if (role === 'child') {
+      const memoryKey = `${room.code}:${room.activeStageId}:${room.gameStarted ? 'started' : 'idle'}`;
+      if (memoryRoomKeyRef.current !== memoryKey) {
+        memoryRoomKeyRef.current = memoryKey;
+        resetMemoryPhase();
+      }
+    }
+
     if (currentChild) {
       setProgress(currentChild.progress);
-      setReadyForReview(currentChild.status === 'waiting');
+      setReadyForReview(isLocalChildDrawing ? false : currentChild.status === 'waiting');
     } else {
       setProgress(0);
       setReadyForReview(false);
@@ -264,10 +342,11 @@ export function App() {
       .catch(() => undefined);
   }
 
-  async function finishDrawing() {
-    const snapshot = await drawing.getCompositeSnapshot();
+  function submitArtwork(snapshot: string, minimumProgress = 90) {
     const status: ApprovalStatus = settings.requireApproval ? 'waiting' : 'approved';
-    const nextProgress = Math.max(progress, 90);
+    const nextProgress = Math.max(progress, minimumProgress);
+    localDrawingSessionRef.current = false;
+    setLocalDrawingSession(false);
     setReadyForReview(status === 'waiting');
     setProgress(nextProgress);
     setPlayers((current) =>
@@ -302,9 +381,19 @@ export function App() {
     syncChildWork(nextProgress, status, snapshot);
   }
 
+  async function finishDrawing() {
+    const snapshot = await drawing.getCompositeSnapshot();
+    submitArtwork(snapshot, 90);
+  }
+
+  function importDrawingPhoto(dataUrl: string) {
+    submitArtwork(dataUrl, 100);
+  }
+
   function startGame() {
     setGameStarted(true);
     setTimerStarted(false);
+    resetMemoryPhase();
     setWinnersOpen(false);
     setWinnersRevealed(false);
     setParentWinnersDismissed(false);
@@ -323,6 +412,7 @@ export function App() {
   function restartGame() {
     setGameStarted(true);
     setTimerStarted(false);
+    resetMemoryPhase();
     setWinnersOpen(false);
     setWinnersRevealed(false);
     setParentWinnersDismissed(false);
@@ -342,6 +432,7 @@ export function App() {
   function clearLesson() {
     setGameStarted(false);
     setTimerStarted(false);
+    resetMemoryPhase();
     setWinnersOpen(false);
     setWinnersRevealed(false);
     setParentWinnersDismissed(false);
@@ -388,7 +479,7 @@ export function App() {
   function finishChildTour() {
     localStorage.setItem('uchi-child-tour', 'done');
     setShowChildTour(false);
-    if (gameStarted && !timerStarted) {
+    if (gameStarted && memoryDone && !timerStarted) {
       setTimerStarted(true);
       patchRoom({ timer_started: true });
     }
@@ -468,8 +559,10 @@ export function App() {
           activeStage={activeStage}
           childName={childName}
           color={color}
-          drawingLocked={settings.drawingLocked || !gameStarted || readyForReview || childWorkSubmitted || lessonTimeUp}
+          drawingLocked={childDrawingLocked}
           gameStarted={gameStarted}
+          memoryActive={memoryActive}
+          memorySeconds={memorySeconds}
           progress={progress}
           readyForReview={readyForReview || childWorkSubmitted}
           size={size}
@@ -477,7 +570,9 @@ export function App() {
           tool={tool}
           onColor={setColor}
           onFinish={finishDrawing}
+          onImportImage={importDrawingPhoto}
           onPreview={() => openPreview(childName)}
+          onSkipMemory={completeMemoryPhase}
           onSize={setSize}
           onTool={setTool}
           onShowHelp={() => setShowChildTour(true)}
@@ -525,8 +620,8 @@ export function App() {
                 <Eye size={20} />
               </button>
             </div>
-            <div className="previewStage">
-              {previewStage?.src && <img src={previewStage.src} alt={previewStage.title} />}
+            <div className={previewDrawing ? 'previewStage artworkOnly' : 'previewStage'}>
+              {!previewDrawing && previewStage?.src && <img src={previewStage.src} alt={previewStage.title} />}
               {previewDrawing ? (
                 <img className="previewDrawingLayer" src={previewDrawing} alt={`Рисунок ${previewPlayer?.name ?? childName}`} />
               ) : (

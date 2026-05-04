@@ -113,7 +113,7 @@ export function WinnersScreen({ childName, players, role, stages, winnersBackgro
           return (
             <article className={player.name.toLowerCase() === childName.toLowerCase() ? 'isOwn' : ''} key={player.id}>
               <button type="button" onClick={() => onPreview(player.name)}>
-                {stage?.src && <img src={stage.src} alt="" />}
+                {!player.drawingData && stage?.src && <img src={stage.src} alt="" />}
                 {player.drawingData && <img className="galleryDrawingLayer" src={player.drawingData} alt={`Рисунок ${player.name}`} />}
               </button>
               <div>

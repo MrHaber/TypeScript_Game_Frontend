@@ -266,3 +266,186 @@
       at TypeScriptParserMixin.parseExprSubscripts (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11081:23)
       at TypeScriptParserMixin.parseUpdate (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11066:21)
       at TypeScriptParserMixin.parseMaybeUnary (C:\Users\user\Desktop\TypeScript Game Frontend\node_modules\@babel\parser\lib\index.js:11046:23)
+[2m22:55:34[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:34[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:35[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:35[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:36[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:36[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:37[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:38[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:39[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:39[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:40[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:40[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:41[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:41[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:42[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:42[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:43[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:44[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:45[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:46[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:46[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:47[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:47[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:48[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:48[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:49[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:49[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:50[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:51[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:52[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:52[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:53[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:53[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:54[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:54[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:55[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:55[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:56[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:57[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:58[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:58[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:55:59[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:56:00[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:56:00[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:56:01[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:56:01[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:56:03[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:56:03[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:56:04[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:56:04[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:56:05[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:56:05[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:56:06[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:56:06[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:56:07[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:56:07[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:57:58[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:57:58[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:57:59[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:57:59[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/UCHI-1IHO[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)
+[2m22:58:35[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/rooms/child[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)

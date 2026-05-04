@@ -19,7 +19,7 @@ Example `.env` for `uch.greathan.ru` behind host Nginx:
 ```env
 FRONTEND_DOMAIN=uch.greathan.ru
 FRONTEND_BIND=127.0.0.1
-FRONTEND_PORT=8080
+FRONTEND_PORT=18080
 VITE_API_URL=/api
 CORS_ORIGINS=https://uch.greathan.ru,http://uch.greathan.ru
 ```

@@ -347,6 +347,10 @@ li {
   isolation: isolate;
 }
 
+.drawingStage:not(.isMemoryPhase) {
+  box-shadow: inset 0 0 0 2px rgba(37, 37, 61, 0.08);
+}
+
 .stageArt,
 .drawingCanvas {
   position: absolute;
@@ -404,6 +408,55 @@ li {
   font-size: 24px;
   font-weight: 950;
   text-align: center;
+}
+
+.memoryOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  align-content: end;
+  gap: 10px;
+  padding: 20px;
+  background: linear-gradient(to top, rgba(37, 37, 61, 0.5), rgba(37, 37, 61, 0.04) 56%);
+  color: #fff;
+  text-align: center;
+  pointer-events: auto;
+}
+
+.memoryOverlay > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--purple-strong);
+  font-size: 20px;
+  font-weight: 950;
+  box-shadow: var(--shadow);
+}
+
+.memoryOverlay strong {
+  font-size: clamp(24px, 3vw, 38px);
+  line-height: 1.05;
+  text-shadow: 0 2px 18px rgba(37, 37, 61, 0.35);
+}
+
+.memoryOverlay p {
+  max-width: 620px;
+  font-size: 18px;
+  line-height: 1.35;
+  font-weight: 850;
+  text-shadow: 0 2px 12px rgba(37, 37, 61, 0.36);
+}
+
+.memoryOverlay .primaryButton {
+  min-width: min(260px, 100%);
+  background: #fff;
+  color: var(--purple-strong);
 }
 
 .reviewOverlay {
@@ -576,6 +629,24 @@ li {
 .secondaryButton {
   background: var(--purple-soft);
   color: var(--purple-strong);
+}
+
+.uploadButton {
+  position: relative;
+  overflow: hidden;
+}
+
+.uploadButton input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.uploadButton.isDisabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  pointer-events: none;
 }
 
 .dangerButton {
@@ -976,6 +1047,14 @@ li {
   pointer-events: none;
 }
 
+.previewStage.artworkOnly {
+  background: #fff;
+}
+
+.previewStage.artworkOnly .previewDrawingLayer {
+  object-fit: contain !important;
+}
+
 .previewPaper {
   position: absolute;
   inset: 12%;
@@ -1372,6 +1451,8 @@ li {
 
 .galleryDrawingLayer {
   z-index: 1;
+  object-fit: contain !important;
+  background: #fff;
 }
 
 .resultGallery div {

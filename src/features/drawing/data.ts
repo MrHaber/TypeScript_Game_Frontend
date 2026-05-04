@@ -21,10 +21,10 @@ const imageEntries: ImageEntry[] = Object.entries(imageModules)
 export const drawingColors = ['#765FDE', '#FF6170', '#87D34C', '#75C7FF', '#FFC388', '#2F2F45'];
 
 export const gameModes: Array<{ id: GameMode; title: string; note: string }> = [
-  { id: 'drawing', title: 'Рисование', note: 'Большой холст, короткая подсказка и простые инструменты.' },
+  { id: 'drawing', title: 'Рисование по памяти', note: 'Ребенок минуту смотрит на арт, затем рисует свою версию на чистом холсте.' },
   { id: 'quiz', title: 'Вопросы', note: 'Короткие вопросы от ведущего без лишнего текста у ребенка.' },
-  { id: 'mixed', title: 'Рисунок + вопрос', note: 'Сначала рисуем, потом обсуждаем работу с группой.' },
-  { id: 'free', title: 'Свободная игра', note: 'Без таймера: только фон, кисть и спокойное творчество.' },
+  { id: 'mixed', title: 'Память + вопрос', note: 'Сначала запоминаем и рисуем, потом обсуждаем работу с группой.' },
+  { id: 'free', title: 'Свободная игра', note: 'Можно рисовать по памяти на холсте или загрузить фото рисунка с листа.' },
 ];
 
 export const initialPlayers: Player[] = [
@@ -63,15 +63,15 @@ function stageId(fileName: string) {
 function promptForTheme(theme: string) {
   const lower = theme.toLowerCase();
   if (lower.includes('космос')) {
-    return 'Добавь звезды, планету, ракету или космического друга.';
+    return 'Запомни космический арт и нарисуй свою версию: формы, героя и самые яркие детали.';
   }
   if (lower.includes('мор')) {
-    return 'Нарисуй клад, кораблик, волну или смешного помощника.';
+    return 'Запомни морскую сцену и нарисуй по памяти то, что успел заметить.';
   }
   if (lower.includes('путеше')) {
-    return 'Дорисуй смешной предмет, дорожку или друга для путешествия.';
+    return 'Запомни картинку путешествия и восстанови ее на чистом холсте.';
   }
-  return 'Дорисуй деталь, героя или забавный предмет на картинке.';
+  return 'Посмотри на арт, запомни детали и нарисуй свою версию по памяти.';
 }
 
 function noteForTheme(theme: string, artNumber: number) {

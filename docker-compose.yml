@@ -38,7 +38,7 @@ services:
     environment:
       FRONTEND_DOMAIN: ${FRONTEND_DOMAIN:-_}
     ports:
-      - "${FRONTEND_BIND:-127.0.0.1}:${FRONTEND_PORT:-8080}:80"
+      - "${FRONTEND_BIND:-127.0.0.1}:${FRONTEND_PORT:-18080}:80"
 
 volumes:
   uchi_backend_data:

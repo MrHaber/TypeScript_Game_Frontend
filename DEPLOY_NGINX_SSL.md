@@ -15,7 +15,7 @@ Server IP:
 Recommended layout:
 
 - host Nginx listens on ports `80` and `443`;
-- Docker frontend listens only on `127.0.0.1:8080`;
+- Docker frontend listens only on `127.0.0.1:18080`;
 - frontend calls `/api`;
 - frontend container proxies `/api` to backend container.
 
@@ -66,7 +66,7 @@ Use:
 ```env
 FRONTEND_DOMAIN=uch.greathan.ru
 FRONTEND_BIND=127.0.0.1
-FRONTEND_PORT=8080
+FRONTEND_PORT=18080
 VITE_API_URL=/api
 CORS_ORIGINS=https://uch.greathan.ru,http://uch.greathan.ru,http://127.0.0.1:5173,http://localhost:5173
 ```
@@ -80,8 +80,8 @@ docker compose up -d --build
 Check local container frontend:
 
 ```bash
-curl http://127.0.0.1:8080
-curl http://127.0.0.1:8080/api/health
+curl http://127.0.0.1:18080
+curl http://127.0.0.1:18080/api/health
 ```
 
 The health endpoint should return:

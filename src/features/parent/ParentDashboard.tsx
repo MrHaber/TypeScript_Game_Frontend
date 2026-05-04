@@ -155,7 +155,7 @@ export function ParentDashboard({
             </div>
           </Panel>
 
-          <Panel title="Категории рисунков" hint="Категорию выбирает родитель. У ребенка остается только большой холст.">
+          <Panel title="Арты для запоминания" hint="Родитель выбирает арт. Ребенок смотрит на него минуту, затем рисует по памяти на чистом холсте.">
             <div className="stageList">
               {filteredStages.map((stage) => (
                 <button className={stage.id === activeStage?.id ? 'stageCard isSelected' : 'stageCard'} type="button" key={stage.id} onClick={() => onStage(stage.id)}>
@@ -212,7 +212,7 @@ export function ParentDashboard({
             </div>
           </Panel>
 
-          <Panel title="Таймер" hint="Для детей 5-6 лет лучше короткие раунды по 3-5 минут.">
+          <Panel title="Таймер" hint="Минутное запоминание идет отдельно. Таймер рисунка запускается после того, как ребенок закончит смотреть арт.">
             <label className="timerControl">
               <span>Минут на рисунок</span>
               <input min="2" max="10" value={settings.timer} type="range" onChange={(event) => onTimer(Number(event.target.value))} />
