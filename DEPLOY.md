@@ -14,23 +14,17 @@ Copy the example env file:
 cp .env.example .env
 ```
 
-Example `.env`:
+Example `.env` for `uchi.greathan.ru` behind host Nginx:
 
 ```env
-FRONTEND_DOMAIN=game.example.com
-FRONTEND_PORT=80
+FRONTEND_DOMAIN=uchi.greathan.ru
+FRONTEND_BIND=127.0.0.1
+FRONTEND_PORT=8080
 VITE_API_URL=/api
-CORS_ORIGINS=http://game.example.com,https://game.example.com
+CORS_ORIGINS=https://uchi.greathan.ru,http://uchi.greathan.ru
 ```
 
-For your current server IP without a domain:
-
-```env
-FRONTEND_DOMAIN=_
-FRONTEND_PORT=80
-VITE_API_URL=/api
-CORS_ORIGINS=http://152.53.251.64,http://152.53.251.64:80
-```
+For HTTPS setup with host Nginx and Certbot, see `DEPLOY_NGINX_SSL.md`.
 
 ## 2. Start
 
