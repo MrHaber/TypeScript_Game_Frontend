@@ -1,0 +1,65 @@
+# Учи.ру Drawing Frontend + FastAPI Backend
+
+Рабочий fullstack-прототип игры: вход/регистрация ребенка, профиль, галерея рисунков, награды, достижения, редактор фона, родительский контроль и Unity WebGL bridge.
+
+## Запуск проекта
+
+Оба сервера одной командой:
+
+```bash
+npm run dev:full
+```
+
+Backend отдельно:
+
+```bash
+python -m pip install -r backend/requirements.txt
+npm run dev:backend
+```
+
+Frontend:
+
+```bash
+npm install
+npm run dev:frontend
+```
+
+Открыть UI: `http://127.0.0.1:5173/`
+
+API: `http://127.0.0.1:8000/api/health`
+
+OpenAPI: `http://127.0.0.1:8000/docs`
+
+Демо-вход:
+
+- имя ребенка: `Миша`
+- для регистрации нового профиля можно использовать любой PIN, например `1234`
+
+## Что уже работает
+
+- Вход и регистрация через FastAPI.
+- SQLite база `backend/uchi_game.sqlite3`.
+- Загрузка профиля, рисунков и достижений из backend.
+- Получение звезды обновляет профиль, дневной прогресс, уровень и достижения.
+- Смена аватара сохраняется в backend и больше не меняется случайно между экранами.
+- Сохранение фона рисунка пишет состояние в backend.
+- Родительский контроль хранит настройку подтверждения экспорта.
+- Кнопка достижений в профиле исправлена: теперь это нормальная горизонтальная кнопка, а не боковая вертикальная плашка.
+
+## Unity WebGL compatibility
+
+- `vite.config.ts` использует `base: './'`, чтобы сборка корректно работала из Unity WebGL/StreamingAssets или любого вложенного пути.
+- UI не зависит от browser router и может быть встроен рядом с Unity canvas.
+- `src/bridge/unityBridge.ts` отправляет события в Unity через:
+
+```js
+window.unityInstance.SendMessage('WebFrontendBridge', 'OnFrontendEvent', JSON.stringify(event))
+```
+
+- Для обратной связи Unity может вызвать:
+
+```js
+window.UchiUnityBridge.receive('openScreen', 'profile')
+```
+
+События фронтенда также дублируются в DOM как `uchi:frontend-event`.
