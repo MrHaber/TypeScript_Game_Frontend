@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import random
-
 from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -12,17 +10,16 @@ from .schemas import (
     AvatarIn,
     BackgroundIn,
     ClaimRewardIn,
+    ChildRoomIn,
+    HostRoomIn,
     LoginIn,
     ParentControlsIn,
     ParentControlsOut,
     PlayerOut,
     RegisterIn,
-    RoomCreateIn,
-    RoomDrawingIn,
-    RoomDrawingStatusIn,
-    RoomJoinIn,
     RoomOut,
-    RoomUpdateIn,
+    RoomPlayerIn,
+    RoomStateIn,
     SnapshotOut,
 )
 
@@ -56,187 +53,6 @@ def current_user(authorization: str | None = Header(default=None)):
 @app.get("/api/health")
 def health() -> dict:
     return {"status": "ok"}
-
-
-def _room_row(db, code: str):
-    room = db.execute("SELECT * FROM rooms WHERE code = ?", (code.upper(),)).fetchone()
-    if room is None:
-        raise HTTPException(status_code=404, detail="Комната не найдена")
-    return room
-
-
-def _serialize_room(db, room) -> dict:
-    players = db.execute(
-        """
-        SELECT id, child_name, age, progress, status
-        FROM room_players
-        WHERE room_id = ?
-        ORDER BY joined_at, id
-        """,
-        (room["id"],),
-    ).fetchall()
-    drawings = db.execute(
-        """
-        SELECT id, player_id, child_name, stage_id, image_data, progress, status, created_at
-        FROM room_drawings
-        WHERE room_id = ?
-        ORDER BY created_at, id
-        """,
-        (room["id"],),
-    ).fetchall()
-    return {
-        "code": room["code"],
-        "host_name": room["host_name"],
-        "mode": room["mode"],
-        "timer": int(room["timer"]),
-        "stage_id": room["stage_id"],
-        "started": bool(room["started"]),
-        "locked": bool(room["locked"]),
-        "players": [dict(player) for player in players],
-        "drawings": [dict(drawing) for drawing in drawings],
-    }
-
-
-def _new_room_code(db) -> str:
-    for _ in range(50):
-        code = f"UCHI-{random.randint(100, 999)}"
-        exists = db.execute("SELECT 1 FROM rooms WHERE code = ?", (code,)).fetchone()
-        if exists is None:
-            return code
-    raise HTTPException(status_code=500, detail="Не удалось создать код комнаты")
-
-
-def _validate_status(status: str) -> str:
-    if status not in {"waiting", "approved", "hidden"}:
-        raise HTTPException(status_code=400, detail="Неизвестный статус рисунка")
-    return status
-
-
-@app.post("/api/rooms", response_model=RoomOut)
-def create_room(payload: RoomCreateIn):
-    with connect() as db:
-        code = _new_room_code(db)
-        db.execute(
-            """
-            INSERT INTO rooms (code, host_name, mode, timer, stage_id, started, locked)
-            VALUES (?, ?, ?, ?, ?, 0, 0)
-            """,
-            (code, payload.host_name, payload.mode, payload.timer, payload.stage_id),
-        )
-        room = _room_row(db, code)
-        return _serialize_room(db, room)
-
-
-@app.get("/api/rooms/{code}", response_model=RoomOut)
-def get_room(code: str):
-    with connect() as db:
-        return _serialize_room(db, _room_row(db, code))
-
-
-@app.post("/api/rooms/{code}/join", response_model=RoomOut)
-def join_room(code: str, payload: RoomJoinIn):
-    with connect() as db:
-        room = _room_row(db, code)
-        db.execute(
-            """
-            INSERT INTO room_players (room_id, child_name, age, progress, status)
-            VALUES (?, ?, ?, 0, 'waiting')
-            ON CONFLICT(room_id, child_name) DO UPDATE SET age = excluded.age
-            """,
-            (room["id"], payload.child_name, payload.age),
-        )
-        return _serialize_room(db, room)
-
-
-@app.patch("/api/rooms/{code}", response_model=RoomOut)
-def update_room(code: str, payload: RoomUpdateIn):
-    with connect() as db:
-        room = _room_row(db, code)
-        data = payload.dict(exclude_unset=True)
-        field_map = {
-            "mode": "mode",
-            "timer": "timer",
-            "stage_id": "stage_id",
-            "started": "started",
-            "locked": "locked",
-        }
-        updates: list[str] = []
-        values: list[object] = []
-        for source, column in field_map.items():
-            if source not in data or data[source] is None:
-                continue
-            value = data[source]
-            if isinstance(value, bool):
-                value = 1 if value else 0
-            updates.append(f"{column} = ?")
-            values.append(value)
-        if updates:
-            values.append(room["id"])
-            db.execute(f"UPDATE rooms SET {', '.join(updates)} WHERE id = ?", values)
-        updated = _room_row(db, code)
-        return _serialize_room(db, updated)
-
-
-@app.post("/api/rooms/{code}/drawings", response_model=RoomOut)
-def save_room_drawing(code: str, payload: RoomDrawingIn):
-    status = _validate_status(payload.status)
-    with connect() as db:
-        room = _room_row(db, code)
-        player_id = payload.player_id
-        if player_id is None:
-            player = db.execute(
-                "SELECT id FROM room_players WHERE room_id = ? AND child_name = ?",
-                (room["id"], payload.child_name),
-            ).fetchone()
-            if player is None:
-                cursor = db.execute(
-                    """
-                    INSERT INTO room_players (room_id, child_name, age, progress, status)
-                    VALUES (?, ?, 6, ?, ?)
-                    """,
-                    (room["id"], payload.child_name, payload.progress, status),
-                )
-                player_id = int(cursor.lastrowid)
-            else:
-                player_id = int(player["id"])
-
-        db.execute(
-            """
-            INSERT INTO room_drawings (room_id, player_id, child_name, stage_id, image_data, progress, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            """,
-            (room["id"], player_id, payload.child_name, payload.stage_id, payload.image_data, payload.progress, status),
-        )
-        db.execute(
-            "UPDATE room_players SET progress = ?, status = ? WHERE id = ? AND room_id = ?",
-            (payload.progress, status, player_id, room["id"]),
-        )
-        updated = _room_row(db, code)
-        return _serialize_room(db, updated)
-
-
-@app.patch("/api/rooms/{code}/drawings/{drawing_id}", response_model=RoomOut)
-def update_room_drawing(code: str, drawing_id: int, payload: RoomDrawingStatusIn):
-    status = _validate_status(payload.status)
-    with connect() as db:
-        room = _room_row(db, code)
-        drawing = db.execute(
-            "SELECT player_id FROM room_drawings WHERE id = ? AND room_id = ?",
-            (drawing_id, room["id"]),
-        ).fetchone()
-        if drawing is None:
-            raise HTTPException(status_code=404, detail="Рисунок не найден")
-        db.execute(
-            "UPDATE room_drawings SET status = ? WHERE id = ? AND room_id = ?",
-            (status, drawing_id, room["id"]),
-        )
-        if drawing["player_id"] is not None:
-            db.execute(
-                "UPDATE room_players SET status = ? WHERE id = ? AND room_id = ?",
-                (status, drawing["player_id"], room["id"]),
-            )
-        updated = _room_row(db, code)
-        return _serialize_room(db, updated)
 
 
 @app.post("/api/auth/register", response_model=AuthOut)
@@ -324,3 +140,46 @@ def update_parent_controls(payload: ParentControlsIn, user=Depends(current_user)
             (user["id"], 1 if payload.require_export_approval else 0),
         )
         return {"require_export_approval": payload.require_export_approval}
+
+
+@app.post("/api/rooms/host", response_model=RoomOut)
+def host_room(payload: HostRoomIn):
+    with connect() as db:
+        room = crud.get_or_create_room(db, payload.host_name, payload.room_code)
+        return crud.serialize_room(db, room)
+
+
+@app.post("/api/rooms/child", response_model=RoomOut)
+def child_room(payload: ChildRoomIn):
+    with connect() as db:
+        room = crud.join_room(db, payload.child_name, payload.room_code)
+        if room is None:
+            raise HTTPException(status_code=404, detail="Комната не найдена")
+        return crud.serialize_room(db, room)
+
+
+@app.get("/api/rooms/{room_code}", response_model=RoomOut)
+def room_snapshot(room_code: str):
+    with connect() as db:
+        room = crud.room_by_code(db, room_code)
+        if room is None:
+            raise HTTPException(status_code=404, detail="Комната не найдена")
+        return crud.serialize_room(db, room)
+
+
+@app.patch("/api/rooms/{room_code}", response_model=RoomOut)
+def patch_room(room_code: str, payload: RoomStateIn):
+    with connect() as db:
+        room = crud.update_room_state(db, room_code, payload.dict(exclude_unset=True))
+        if room is None:
+            raise HTTPException(status_code=404, detail="Комната не найдена")
+        return crud.serialize_room(db, room)
+
+
+@app.patch("/api/rooms/{room_code}/players", response_model=RoomOut)
+def patch_room_player(room_code: str, payload: RoomPlayerIn):
+    with connect() as db:
+        room = crud.update_room_player(db, room_code, payload.dict(exclude_unset=True))
+        if room is None:
+            raise HTTPException(status_code=404, detail="Комната не найдена")
+        return crud.serialize_room(db, room)

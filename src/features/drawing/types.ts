@@ -2,7 +2,7 @@ import type { PointerEvent as ReactPointerEvent, ReactNode, RefObject } from 're
 
 export type Role = 'login' | 'child' | 'parent';
 export type Tool = 'brush' | 'eraser';
-export type ApprovalStatus = 'waiting' | 'approved' | 'hidden';
+export type ApprovalStatus = 'drawing' | 'waiting' | 'approved' | 'hidden';
 export type GameMode = 'drawing' | 'quiz' | 'mixed' | 'free';
 
 export type Stage = {
@@ -22,6 +22,8 @@ export type Player = {
   age: number;
   progress: number;
   status: ApprovalStatus;
+  stageId?: string;
+  drawingData?: string | null;
 };
 
 export type ParentSettings = {
@@ -37,11 +39,11 @@ export type DrawingHandlers = {
   historyCount: number;
   startDrawing: (event: ReactPointerEvent<HTMLCanvasElement>) => void;
   draw: (event: ReactPointerEvent<HTMLCanvasElement>) => void;
-  stopDrawing: () => void;
+  stopDrawing: (event?: ReactPointerEvent<HTMLCanvasElement>) => void;
   undo: () => void;
   clearCanvas: () => void;
-  downloadDrawing: () => void | Promise<void>;
-  getComposedDataUrl: () => Promise<string | null>;
+  downloadDrawing: () => void;
+  getSnapshot: () => string;
 };
 
 export type PanelProps = {

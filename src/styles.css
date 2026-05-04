@@ -122,6 +122,15 @@ li {
   padding: 28px;
 }
 
+.loginError {
+  margin-top: 6px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: #ffeeee;
+  color: #d5260e;
+  font-weight: 900;
+}
+
 .loginHero p:not(.eyebrow) {
   color: var(--muted);
   font-size: 18px;
@@ -132,29 +141,6 @@ li {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 18px;
-}
-
-.loginStatus,
-.floatingNotice {
-  padding: 12px 16px;
-  border-radius: 20px;
-  background: #fff7d8;
-  color: #8a5b00;
-  font-weight: 950;
-  box-shadow: var(--shadow);
-}
-
-.floatingNotice {
-  position: fixed;
-  right: 18px;
-  bottom: 18px;
-  z-index: 26;
-  max-width: min(420px, calc(100vw - 36px));
-}
-
-.loginActions {
-  display: grid;
-  gap: 10px;
 }
 
 .loginCard {
@@ -352,6 +338,8 @@ li {
 
 .drawingCanvas {
   z-index: 1;
+  display: block;
+  background: transparent;
   touch-action: none;
   cursor: crosshair;
 }
@@ -389,7 +377,6 @@ li {
   font-size: 24px;
   font-weight: 950;
   text-align: center;
-  pointer-events: none;
 }
 
 .progressRow {
@@ -587,14 +574,24 @@ li {
 
 .parentGrid {
   display: grid;
-  grid-template-columns: 1.2fr 1fr;
+  grid-template-columns: minmax(0, 1.1fr) minmax(340px, 0.9fr);
   gap: 18px;
+  align-items: start;
+}
+
+.dashboardColumn {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  min-width: 0;
 }
 
 .panel {
   display: grid;
-  gap: 14px;
-  padding: 18px;
+  align-self: start;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 24px;
 }
 
 .panelHeader {
@@ -616,7 +613,7 @@ li {
 
 .panelHint {
   color: var(--muted);
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.35;
 }
 
@@ -651,28 +648,29 @@ li {
 
 .stageCard {
   display: grid;
-  grid-template-columns: 74px minmax(0, 1fr) auto;
+  grid-template-columns: 72px minmax(0, 1fr) max-content;
   gap: 12px;
   align-items: center;
-  min-height: 92px;
-  padding: 10px;
+  min-height: 74px;
+  padding: 9px 12px 9px 9px;
   border: 2px solid var(--line);
-  border-radius: 22px;
-  background: #fff;
+  border-radius: 16px;
+  background: #fbfaff;
   color: var(--ink);
   text-align: left;
 }
 
 .stageCard.isSelected {
   border-color: var(--purple);
-  background: var(--purple-soft);
+  background: linear-gradient(0deg, rgba(118, 95, 222, 0.1), rgba(118, 95, 222, 0.1)), #fff;
 }
 
 .stageCard img {
-  width: 74px;
-  height: 62px;
-  border-radius: 16px;
+  width: 72px;
+  height: 54px;
+  border-radius: 12px;
   object-fit: cover;
+  box-shadow: inset 0 0 0 1px rgba(37, 37, 61, 0.08);
 }
 
 .stageCard small {
@@ -683,38 +681,55 @@ li {
 }
 
 .stageCard em {
+  justify-self: end;
   color: var(--purple);
   font-style: normal;
   font-weight: 950;
+  white-space: nowrap;
 }
 
 .playerList article {
   display: grid;
-  grid-template-columns: 90px minmax(80px, 1fr) auto;
+  grid-template-columns: 82px minmax(70px, 1fr) auto 34px;
   gap: 10px;
   align-items: center;
-  padding: 12px;
-  border-radius: 20px;
+  padding: 10px;
+  border-radius: 16px;
   background: #f8f7ff;
 }
 
+.iconAction {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 17px;
+  background: #fff;
+  color: var(--purple);
+}
+
 .smallTrack {
-  height: 12px;
+  height: 10px;
 }
 
 .statusBadge {
   display: inline-flex;
   align-items: center;
-  min-height: 34px;
-  padding: 0 10px;
-  border-radius: 17px;
-  font-size: 13px;
+  min-height: 28px;
+  padding: 0 9px;
+  border-radius: 14px;
+  font-size: 12px;
   font-weight: 950;
 }
 
 .statusBadge.waiting {
   background: #fff3e7;
   color: #a14f00;
+}
+
+.statusBadge.drawing {
+  background: #eef8ff;
+  color: #146da1;
 }
 
 .statusBadge.approved {
@@ -749,49 +764,10 @@ li {
   display: grid;
   place-items: center;
   gap: 6px;
-  padding: 16px;
-  border-radius: 22px;
+  padding: 12px;
+  border-radius: 18px;
   background: #f8f7ff;
   color: var(--ink);
-}
-
-.qrMosaic {
-  display: grid;
-  grid-template-columns: repeat(7, 10px);
-  gap: 3px;
-  padding: 10px;
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: inset 0 0 0 2px var(--purple-soft);
-}
-
-.qrMosaic.small {
-  grid-template-columns: repeat(7, 8px);
-  gap: 2px;
-  padding: 8px;
-}
-
-.qrMosaic span {
-  width: 10px;
-  height: 10px;
-  border-radius: 2px;
-  background: #ececf1;
-}
-
-.qrMosaic.small span {
-  width: 8px;
-  height: 8px;
-}
-
-.qrMosaic .isDark {
-  background: var(--ink);
-}
-
-.uiIcon {
-  width: 22px;
-  height: 22px;
-  flex: 0 0 auto;
-  object-fit: contain;
 }
 
 .approvalPreview {
@@ -828,12 +804,39 @@ li {
 .roomSummary {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 14px;
+  gap: 12px;
   align-items: center;
 }
 
 .qrCard.compact {
-  min-width: 160px;
+  width: 132px;
+  min-width: 132px;
+}
+
+.roomActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.roomActions .primaryButton,
+.roomActions .secondaryButton {
+  min-height: 52px;
+  padding: 0 14px;
+  border-radius: 24px;
+  font-size: 16px;
+}
+
+.roomUpdateToast {
+  justify-self: start;
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 18px;
+  background: #e7f6db;
+  color: #31720b;
+  font-size: 14px;
+  font-weight: 950;
+  animation: roomNoticeFade 3.2s ease forwards;
 }
 
 .reviewNotice {
@@ -867,14 +870,6 @@ li {
   font-weight: 950;
   box-shadow: var(--shadow);
   pointer-events: none;
-}
-
-.readyRibbon.waiting {
-  right: 18px;
-  left: auto;
-  max-width: min(360px, calc(100% - 36px));
-  background: #fff7d8;
-  color: #8a5b00;
 }
 
 .previewBackdrop {
@@ -913,14 +908,16 @@ li {
   object-fit: cover;
 }
 
-.previewStage img.savedDrawingImage {
-  object-fit: contain;
-  background: #fff;
+.previewDrawingLayer {
+  z-index: 1;
+  object-fit: fill !important;
+  pointer-events: none;
 }
 
 .previewPaper {
   position: absolute;
   inset: 12%;
+  z-index: 2;
   display: grid;
   place-items: center;
   align-content: center;
@@ -938,6 +935,19 @@ li {
 .previewPaper span {
   color: var(--muted);
   font-weight: 850;
+}
+
+.previewMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.previewMeta strong {
+  color: var(--ink);
 }
 
 .tourBackdrop {
@@ -1054,8 +1064,30 @@ li {
     grid-template-columns: 1fr;
   }
 
+  .roomActions {
+    grid-template-columns: 1fr;
+  }
+
   .taskBubble > span,
   .roundHelp {
     justify-self: start;
+  }
+}
+
+@keyframes roomNoticeFade {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  12%,
+  72% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-4px);
   }
 }

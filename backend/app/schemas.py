@@ -69,65 +69,58 @@ class ParentControlsOut(BaseModel):
     require_export_approval: bool
 
 
+class RoomSettingsOut(BaseModel):
+    requireApproval: bool
+    galleryEnabled: bool
+    drawingLocked: bool
+    soundEnabled: bool
+    timer: int
+
+
 class RoomPlayerOut(BaseModel):
     id: int
-    child_name: str
-    age: int
+    name: str
+    age: int = 6
     progress: int
     status: str
-
-
-class RoomDrawingOut(BaseModel):
-    id: int
-    player_id: int | None = None
-    child_name: str
-    stage_id: str
-    image_data: str
-    progress: int
-    status: str
-    created_at: str
+    stageId: str
+    drawingData: str | None = None
 
 
 class RoomOut(BaseModel):
     code: str
-    host_name: str
-    mode: str
-    timer: int
-    stage_id: str
-    started: bool
-    locked: bool
+    hostName: str
+    activeMode: str
+    activeStageId: str
+    gameStarted: bool
+    settings: RoomSettingsOut
     players: list[RoomPlayerOut]
-    drawings: list[RoomDrawingOut]
 
 
-class RoomCreateIn(BaseModel):
-    host_name: str = Field(min_length=2, max_length=40)
-    mode: str = Field(default="drawing", max_length=24)
-    timer: int = Field(default=5, ge=1, le=30)
-    stage_id: str = Field(default="forest", max_length=64)
+class HostRoomIn(BaseModel):
+    host_name: str = Field(min_length=2, max_length=32)
+    room_code: str | None = Field(default=None, max_length=64)
 
 
-class RoomJoinIn(BaseModel):
+class ChildRoomIn(BaseModel):
     child_name: str = Field(min_length=2, max_length=32)
-    age: int = Field(default=6, ge=3, le=12)
+    room_code: str = Field(min_length=4, max_length=64)
 
 
-class RoomUpdateIn(BaseModel):
-    mode: str | None = Field(default=None, max_length=24)
-    timer: int | None = Field(default=None, ge=1, le=30)
-    stage_id: str | None = Field(default=None, max_length=64)
-    started: bool | None = None
-    locked: bool | None = None
+class RoomStateIn(BaseModel):
+    active_mode: str | None = None
+    active_stage_id: str | None = None
+    game_started: bool | None = None
+    drawing_locked: bool | None = None
+    require_approval: bool | None = None
+    gallery_enabled: bool | None = None
+    sound_enabled: bool | None = None
+    timer: int | None = Field(default=None, ge=2, le=10)
 
 
-class RoomDrawingIn(BaseModel):
-    player_id: int | None = None
+class RoomPlayerIn(BaseModel):
     child_name: str = Field(min_length=2, max_length=32)
-    stage_id: str = Field(max_length=64)
-    image_data: str = Field(min_length=32)
-    progress: int = Field(default=0, ge=0, le=100)
-    status: str = Field(default="waiting", max_length=16)
-
-
-class RoomDrawingStatusIn(BaseModel):
-    status: str = Field(max_length=16)
+    progress: int | None = Field(default=None, ge=0, le=100)
+    status: str | None = None
+    stage_id: str | None = None
+    drawing_data: str | None = None

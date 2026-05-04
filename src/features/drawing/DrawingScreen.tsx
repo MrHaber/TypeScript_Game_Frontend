@@ -1,6 +1,6 @@
-import { Brush, Check, Eraser, Eye, HelpCircle, Lock, Trash2, Undo2, Wand2 } from 'lucide-react';
+import { Brush, Check, Download, Eraser, Eye, HelpCircle, Lock, Play, Trash2, Undo2, Wand2 } from 'lucide-react';
 import type { DrawingHandlers, Stage, Tool } from './types';
-import { drawingColors, uiIcons } from './data';
+import { drawingColors } from './data';
 
 type DrawingScreenProps = DrawingHandlers & {
   activeStage?: Stage;
@@ -21,10 +21,6 @@ type DrawingScreenProps = DrawingHandlers & {
   onTool: (value: Tool) => void;
   onShowHelp: () => void;
 };
-
-function IconImage({ src }: { src?: string }) {
-  return src ? <img className="uiIcon" src={src} alt="" /> : null;
-}
 
 export function DrawingScreen({
   activeStage,
@@ -85,21 +81,22 @@ export function DrawingScreen({
             <Brush size={20} />
             Рисуй здесь
           </div>
-          {!gameStarted && !drawingLocked && (
-            <div className="readyRibbon waiting">
-              Можно потренироваться. Взрослый скоро нажмет старт.
+          {!gameStarted && (
+            <div className="softOverlay">
+              <Play size={34} />
+              <span>Хост скоро начнет занятие</span>
             </div>
           )}
-          {drawingLocked && (
+          {gameStarted && drawingLocked && (
             <div className="softOverlay">
               <Lock size={34} />
-              <span>Взрослый поставил рисование на паузу</span>
+              <span>Хост остановил рисование</span>
             </div>
           )}
           {readyForReview && (
             <div className="readyRibbon">
               <Check size={20} />
-              Рисунок отправлен взрослому
+              Рисунок отправлен хосту
             </div>
           )}
         </div>
@@ -153,7 +150,7 @@ export function DrawingScreen({
           <Eye size={20} />
           <div>
             <strong>Подсказка</strong>
-            <p>Для детей 5-6 лет лучше рисовать крупно: солнышко, круг, домик, улыбку или звездочку.</p>
+            <p>Большие линии лучше видны на общем экране. Для детей 5-6 лет это проще, чем мелкая кисть.</p>
           </div>
         </aside>
 
@@ -167,7 +164,7 @@ export function DrawingScreen({
             Очистить
           </button>
           <button className="secondaryButton" type="button" onClick={downloadDrawing}>
-            <IconImage src={uiIcons.download} />
+            <Download size={20} />
             {saved ? 'Сохранено' : 'Сохранить'}
           </button>
           <button className="secondaryButton" type="button" onClick={onPreview}>

@@ -103,44 +103,35 @@ def init_db() -> None:
             );
 
             CREATE TABLE IF NOT EXISTS rooms (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              code TEXT NOT NULL UNIQUE COLLATE NOCASE,
+              code TEXT PRIMARY KEY,
               host_name TEXT NOT NULL,
-              mode TEXT NOT NULL DEFAULT 'drawing',
+              active_mode TEXT NOT NULL DEFAULT 'drawing',
+              active_stage_id TEXT NOT NULL DEFAULT 'forest',
+              game_started INTEGER NOT NULL DEFAULT 0,
+              drawing_locked INTEGER NOT NULL DEFAULT 0,
+              require_approval INTEGER NOT NULL DEFAULT 1,
+              gallery_enabled INTEGER NOT NULL DEFAULT 0,
+              sound_enabled INTEGER NOT NULL DEFAULT 1,
               timer INTEGER NOT NULL DEFAULT 5,
-              stage_id TEXT NOT NULL DEFAULT 'forest',
-              started INTEGER NOT NULL DEFAULT 0,
-              locked INTEGER NOT NULL DEFAULT 0,
+              updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
               created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
 
             CREATE TABLE IF NOT EXISTS room_players (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              room_id INTEGER NOT NULL,
+              room_code TEXT NOT NULL,
               child_name TEXT NOT NULL,
-              age INTEGER NOT NULL DEFAULT 6,
               progress INTEGER NOT NULL DEFAULT 0,
-              status TEXT NOT NULL DEFAULT 'waiting',
-              joined_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-              UNIQUE(room_id, child_name),
-              FOREIGN KEY(room_id) REFERENCES rooms(id)
-            );
-
-            CREATE TABLE IF NOT EXISTS room_drawings (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              room_id INTEGER NOT NULL,
-              player_id INTEGER,
-              child_name TEXT NOT NULL,
-              stage_id TEXT NOT NULL,
-              image_data TEXT NOT NULL,
-              progress INTEGER NOT NULL DEFAULT 0,
-              status TEXT NOT NULL DEFAULT 'waiting',
-              created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-              FOREIGN KEY(room_id) REFERENCES rooms(id),
-              FOREIGN KEY(player_id) REFERENCES room_players(id)
+              status TEXT NOT NULL DEFAULT 'drawing',
+              stage_id TEXT NOT NULL DEFAULT 'forest',
+              drawing_data TEXT,
+              updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              PRIMARY KEY(room_code, child_name COLLATE NOCASE),
+              FOREIGN KEY(room_code) REFERENCES rooms(code)
             );
             """
         )
+
+        ensure_room_tables(db)
 
         for drawing in BASE_DRAWINGS:
             db.execute(
@@ -171,6 +162,62 @@ def init_db() -> None:
             )
             demo_id = int(cursor.lastrowid)
             ensure_user_defaults(db, demo_id)
+
+
+def ensure_room_tables(db: sqlite3.Connection) -> None:
+    room_columns = {row["name"] for row in db.execute("PRAGMA table_info(rooms)").fetchall()}
+    required_room_columns = {
+        "code",
+        "host_name",
+        "active_mode",
+        "active_stage_id",
+        "game_started",
+        "drawing_locked",
+        "require_approval",
+        "gallery_enabled",
+        "sound_enabled",
+        "timer",
+    }
+    if not required_room_columns.issubset(room_columns):
+        db.execute("DROP TABLE IF EXISTS rooms")
+        db.execute(
+            """
+            CREATE TABLE rooms (
+              code TEXT PRIMARY KEY,
+              host_name TEXT NOT NULL,
+              active_mode TEXT NOT NULL DEFAULT 'drawing',
+              active_stage_id TEXT NOT NULL DEFAULT 'forest',
+              game_started INTEGER NOT NULL DEFAULT 0,
+              drawing_locked INTEGER NOT NULL DEFAULT 0,
+              require_approval INTEGER NOT NULL DEFAULT 1,
+              gallery_enabled INTEGER NOT NULL DEFAULT 0,
+              sound_enabled INTEGER NOT NULL DEFAULT 1,
+              timer INTEGER NOT NULL DEFAULT 5,
+              updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+
+    player_columns = {row["name"] for row in db.execute("PRAGMA table_info(room_players)").fetchall()}
+    required_player_columns = {"room_code", "child_name", "progress", "status", "stage_id", "drawing_data"}
+    if not required_player_columns.issubset(player_columns):
+        db.execute("DROP TABLE IF EXISTS room_players")
+        db.execute(
+            """
+            CREATE TABLE room_players (
+              room_code TEXT NOT NULL,
+              child_name TEXT NOT NULL,
+              progress INTEGER NOT NULL DEFAULT 0,
+              status TEXT NOT NULL DEFAULT 'drawing',
+              stage_id TEXT NOT NULL DEFAULT 'forest',
+              drawing_data TEXT,
+              updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              PRIMARY KEY(room_code, child_name COLLATE NOCASE),
+              FOREIGN KEY(room_code) REFERENCES rooms(code)
+            )
+            """
+        )
 
 
 def ensure_user_defaults(db: sqlite3.Connection, user_id: int) -> None:
