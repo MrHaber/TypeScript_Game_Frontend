@@ -5,6 +5,8 @@ import { api, type RoomSnapshot } from './api/client';
 import { LoginGate } from './features/auth/LoginGate';
 import { buildStages, drawingColors, winnersBackground } from './features/drawing/data';
 import { DrawingScreen } from './features/drawing/DrawingScreen';
+import { QuizScreen } from './features/drawing/QuizScreen';
+import { quizPackForStage } from './features/drawing/quizData';
 import { WinnersScreen } from './features/drawing/WinnersScreen';
 import type { ApprovalStatus, GameMode, ParentSettings, Player, Role, Tool } from './features/drawing/types';
 import { useDrawingCanvas } from './features/drawing/useDrawingCanvas';
@@ -59,18 +61,21 @@ export function App() {
   const [winnersRevealed, setWinnersRevealed] = useState(false);
   const [parentWinnersDismissed, setParentWinnersDismissed] = useState(false);
   const [loginError, setLoginError] = useState('');
+  const [roomError, setRoomError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [showChildTour, setShowChildTour] = useState(() => localStorage.getItem('uchi-child-tour') !== 'done');
   const [showParentTour, setShowParentTour] = useState(() => localStorage.getItem('uchi-parent-tour') !== 'done');
   const memoryRoomKeyRef = useRef('');
   const memoryDoneRef = useRef(false);
   const localDrawingSessionRef = useRef(false);
+  const localWorkSubmittedRef = useRef(false);
 
   const activeStage = stages.find((stage) => stage.id === selectedStageId) ?? stages[0];
   const currentChildPlayer = players.find((player) => player.name.toLowerCase() === childName.toLowerCase());
-  const lessonTimeUp = gameStarted && memoryDone && timerStarted && remainingSeconds === 0;
+  const quizActive = activeMode === 'quiz';
+  const lessonTimeUp = gameStarted && (quizActive || memoryDone) && timerStarted && remainingSeconds === 0;
   const childWorkSubmitted = role === 'child' && !localDrawingSession && Boolean(currentChildPlayer && currentChildPlayer.status !== 'drawing');
-  const memoryActive = role === 'child' && gameStarted && !showChildTour && !memoryDone && !childWorkSubmitted && !lessonTimeUp;
+  const memoryActive = role === 'child' && !quizActive && gameStarted && !showChildTour && !memoryDone && !childWorkSubmitted && !lessonTimeUp;
   const childDrawingLocked = settings.drawingLocked || !gameStarted || !memoryDone || readyForReview || childWorkSubmitted || lessonTimeUp;
 
   const drawing = useDrawingCanvas({
@@ -86,15 +91,23 @@ export function App() {
   const previewPlayer = players.find((player) => player.name === previewPlayerName) ?? players.find((player) => player.name === childName) ?? players[0];
   const previewStage = stages.find((stage) => stage.id === previewPlayer?.stageId) ?? activeStage;
   const previewDrawing = previewPlayer?.drawingData || (previewPlayer?.name === childName ? drawing.getSnapshot() : '');
+  const activeQuizPack = quizPackForStage(activeStage);
   const everyoneRated =
     players.length > 0 &&
     players.every((player) => (player.rating ?? 0) > 0 && (player.status === 'approved' || player.status === 'hidden'));
-  const childShouldSeeResults = role === 'child' && lessonTimeUp;
+  const childHasSubmittedWork = role === 'child' && Boolean(currentChildPlayer && currentChildPlayer.status !== 'drawing') && !localDrawingSession;
+  const childIsInActiveRound =
+    role === 'child' &&
+    gameStarted &&
+    !lessonTimeUp &&
+    !childHasSubmittedWork &&
+    (quizActive || memoryActive || localDrawingSession || memoryDone);
+  const childShouldSeeResults = role === 'child' && (lessonTimeUp || (winnersRevealed && childHasSubmittedWork && everyoneRated));
   const blockChildWinners = role === 'child' && localDrawingSession;
   const showWinnersScreen =
-    role !== 'login' &&
-    !blockChildWinners &&
-    (winnersOpen || childShouldSeeResults || (winnersRevealed && !(role === 'parent' && parentWinnersDismissed)));
+    role === 'parent'
+      ? winnersOpen || (winnersRevealed && !parentWinnersDismissed)
+      : role === 'child' && !blockChildWinners && !childIsInActiveRound && childShouldSeeResults;
 
   useEffect(() => {
     if (role === 'login' || !roomCode) return;
@@ -135,10 +148,10 @@ export function App() {
   }, [gameStarted, timerStarted, remainingSeconds]);
 
   useEffect(() => {
-    if (role !== 'child' || !gameStarted || showChildTour || timerStarted || !memoryDone) return;
+    if (role !== 'child' || !gameStarted || showChildTour || timerStarted || (!quizActive && !memoryDone)) return;
     setTimerStarted(true);
     patchRoom({ timer_started: true });
-  }, [role, gameStarted, showChildTour, timerStarted, memoryDone]);
+  }, [role, gameStarted, showChildTour, timerStarted, memoryDone, quizActive]);
 
   useEffect(() => {
     if (!memoryActive) return;
@@ -161,6 +174,7 @@ export function App() {
   function resetMemoryPhase() {
     memoryDoneRef.current = false;
     localDrawingSessionRef.current = false;
+    localWorkSubmittedRef.current = false;
     setMemoryDone(false);
     setLocalDrawingSession(false);
     setMemorySeconds(MEMORY_SECONDS);
@@ -169,6 +183,7 @@ export function App() {
   function completeMemoryPhase() {
     memoryDoneRef.current = true;
     localDrawingSessionRef.current = true;
+    localWorkSubmittedRef.current = false;
     setMemoryDone(true);
     setLocalDrawingSession(true);
     setReadyForReview(false);
@@ -195,16 +210,25 @@ export function App() {
     }
   }
 
-  function applyRoom(room: RoomSnapshot) {
-    const isLocalChildDrawing = role === 'child' && localDrawingSessionRef.current;
-    const keepLocalChildTimer = role === 'child' && room.gameStarted && memoryDoneRef.current;
+  function applyRoom(room: RoomSnapshot, roleOverride: Role = role) {
+    const effectiveRole = roleOverride;
+    const roomQuizActive = room.activeMode === 'quiz';
+    const isChildRoom = effectiveRole === 'child';
+    const isLocalChildDrawing = isChildRoom && localDrawingSessionRef.current;
+    const isLocalChildSubmitted = isChildRoom && localWorkSubmittedRef.current;
+    const isFreshChildRound =
+      isChildRoom &&
+      room.gameStarted &&
+      !isLocalChildSubmitted &&
+      (roomQuizActive || (!room.timerStarted && !room.winnersRevealed));
+    const keepLocalChildTimer = isChildRoom && room.gameStarted && (memoryDoneRef.current || roomQuizActive);
     setRoomCode(room.code);
     setGameStarted(room.gameStarted);
     if (!keepLocalChildTimer) {
       setTimerStarted(room.timerStarted);
     }
-    setWinnersRevealed(isLocalChildDrawing ? false : room.winnersRevealed);
-    if (!room.winnersRevealed) {
+    setWinnersRevealed(isLocalChildDrawing || isFreshChildRound ? false : room.winnersRevealed);
+    if (!room.winnersRevealed || isFreshChildRound) {
       setParentWinnersDismissed(false);
     }
     if (!keepLocalChildTimer) {
@@ -220,17 +244,24 @@ export function App() {
       setSelectedStageId(room.activeStageId);
     }
     const roomPlayers =
-      isLocalChildDrawing
+      isLocalChildDrawing || isFreshChildRound
         ? room.players.map((player) =>
             player.name.toLowerCase() === childName.toLowerCase()
-              ? { ...player, status: 'drawing' as ApprovalStatus }
+              ? {
+                  ...player,
+                  progress: isFreshChildRound ? 0 : player.progress,
+                  status: 'drawing' as ApprovalStatus,
+                  rating: isFreshChildRound ? 0 : player.rating,
+                  drawingData: isFreshChildRound ? null : player.drawingData,
+                  stageId: room.activeStageId,
+                }
               : player,
           )
         : room.players;
     setPlayers(roomPlayers);
 
     const currentChild = roomPlayers.find((player) => player.name.toLowerCase() === childName.toLowerCase());
-    if (role === 'child') {
+    if (isChildRoom) {
       const memoryKey = `${room.code}:${room.activeStageId}:${room.gameStarted ? 'started' : 'idle'}`;
       if (memoryRoomKeyRef.current !== memoryKey) {
         memoryRoomKeyRef.current = memoryKey;
@@ -240,7 +271,7 @@ export function App() {
 
     if (currentChild) {
       setProgress(currentChild.progress);
-      setReadyForReview(isLocalChildDrawing ? false : currentChild.status === 'waiting');
+      setReadyForReview(isLocalChildDrawing || isFreshChildRound ? false : currentChild.status === 'waiting');
     } else {
       setProgress(0);
       setReadyForReview(false);
@@ -302,13 +333,13 @@ export function App() {
         localStorage.setItem('uchi-parent-login', auth.parent.login);
         setParentToken(auth.token);
         setHostName(auth.parent.displayName || displayName);
-        applyRoom(auth.room);
+        applyRoom(auth.room, 'parent');
         setRole('parent');
         return;
       }
 
       const room = await api.childRoom(childName.trim() || 'Ребенок', roomCode.trim());
-      applyRoom(room);
+      applyRoom(room, 'child');
       setRole(nextRole);
     } catch (error) {
       setLoginError(error instanceof Error ? error.message : 'Не удалось подключиться к комнате');
@@ -319,7 +350,17 @@ export function App() {
 
   function patchRoom(payload: Parameters<typeof api.updateRoom>[1]) {
     if (!roomCode) return;
-    void api.updateRoom(roomCode, payload, parentToken).then(applyRoom).catch(() => undefined);
+    void api
+      .updateRoom(roomCode, payload, parentToken)
+      .then((room) => {
+        setRoomError('');
+        applyRoom(room);
+      })
+      .catch((error) => {
+        if (role === 'parent') {
+          setRoomError(error instanceof Error ? error.message : 'Не удалось обновить комнату');
+        }
+      });
   }
 
   function setSetting<K extends keyof ParentSettings>(key: K, value: ParentSettings[K]) {
@@ -346,6 +387,7 @@ export function App() {
     const status: ApprovalStatus = settings.requireApproval ? 'waiting' : 'approved';
     const nextProgress = Math.max(progress, minimumProgress);
     localDrawingSessionRef.current = false;
+    localWorkSubmittedRef.current = true;
     setLocalDrawingSession(false);
     setReadyForReview(status === 'waiting');
     setProgress(nextProgress);
@@ -390,23 +432,38 @@ export function App() {
     submitArtwork(dataUrl, 100);
   }
 
-  function startGame() {
-    setGameStarted(true);
-    setTimerStarted(false);
-    resetMemoryPhase();
-    setWinnersOpen(false);
-    setWinnersRevealed(false);
-    setParentWinnersDismissed(false);
-    setRemainingSeconds(settings.timer * 60);
-    setSettings((current) => ({ ...current, drawingLocked: false }));
-    patchRoom({
-      active_mode: activeMode,
-      active_stage_id: activeStage?.id,
-      game_started: true,
-      drawing_locked: false,
-      timer_started: false,
-      winners_revealed: false,
-    });
+  function finishQuiz(result: { correct: number; total: number; snapshot: string }) {
+    const percent = Math.round((result.correct / result.total) * 100);
+    submitArtwork(result.snapshot, percent);
+  }
+
+  async function startGame() {
+    setRoomError('');
+    try {
+      const room = await api.updateRoom(
+        roomCode,
+        {
+          active_mode: activeMode,
+          active_stage_id: activeStage?.id,
+          game_started: true,
+          drawing_locked: false,
+          timer_started: false,
+          winners_revealed: false,
+          reset_players: true,
+        },
+        parentToken,
+      );
+      resetMemoryPhase();
+      setWinnersOpen(false);
+      setWinnersRevealed(false);
+      setParentWinnersDismissed(false);
+      setProgress(0);
+      setReadyForReview(false);
+      setRemainingSeconds(room.settings.timer * 60);
+      applyRoom(room);
+    } catch (error) {
+      setRoomError(error instanceof Error ? error.message : 'Не удалось начать занятие');
+    }
   }
 
   function restartGame() {
@@ -479,7 +536,7 @@ export function App() {
   function finishChildTour() {
     localStorage.setItem('uchi-child-tour', 'done');
     setShowChildTour(false);
-    if (gameStarted && memoryDone && !timerStarted) {
+    if (gameStarted && (memoryDone || quizActive) && !timerStarted) {
       setTimerStarted(true);
       patchRoom({ timer_started: true });
     }
@@ -553,7 +610,19 @@ export function App() {
         />
       )}
 
-      {role === 'child' && !showWinnersScreen && (
+      {role === 'child' && !showWinnersScreen && quizActive && (
+        <QuizScreen
+          activeStage={activeStage}
+          childName={childName}
+          gameStarted={gameStarted}
+          pack={activeQuizPack}
+          readyForReview={readyForReview || childWorkSubmitted}
+          onFinish={finishQuiz}
+          onShowHelp={() => setShowChildTour(true)}
+        />
+      )}
+
+      {role === 'child' && !showWinnersScreen && !quizActive && (
         <DrawingScreen
           {...drawing}
           activeStage={activeStage}
@@ -588,6 +657,7 @@ export function App() {
           players={players}
           readyForReview={readyForReview}
           roomCode={roomCode}
+          roomError={roomError}
           settings={settings}
           stages={stages}
           onApprove={() => setApproval('approved')}

@@ -244,13 +244,20 @@ def join_room(db: sqlite3.Connection, child_name: str, room_code: str) -> sqlite
     if room is None:
         return None
 
+    active_new_round = bool(room["game_started"]) and not bool(room["timer_started"]) and not bool(room["winners_revealed"])
     db.execute(
         """
         INSERT INTO room_players (room_code, child_name, stage_id)
         VALUES (?, ?, ?)
-        ON CONFLICT(room_code, child_name) DO UPDATE SET updated_at = CURRENT_TIMESTAMP
+        ON CONFLICT(room_code, child_name) DO UPDATE SET
+          progress = CASE WHEN ? THEN 0 ELSE progress END,
+          status = CASE WHEN ? THEN 'drawing' ELSE status END,
+          rating = CASE WHEN ? THEN 0 ELSE rating END,
+          stage_id = excluded.stage_id,
+          drawing_data = CASE WHEN ? THEN NULL ELSE drawing_data END,
+          updated_at = CURRENT_TIMESTAMP
         """,
-        (room["code"], child_name, room["active_stage_id"]),
+        (room["code"], child_name, room["active_stage_id"], active_new_round, active_new_round, active_new_round, active_new_round),
     )
     return room_by_code(db, room["code"])
 
@@ -413,6 +420,19 @@ def room_players_are_rated(db: sqlite3.Connection, room_code: str) -> bool:
 def refresh_room_flags(db: sqlite3.Connection, room: sqlite3.Row | None) -> sqlite3.Row | None:
     if room is None:
         return None
+    if bool(room["game_started"]) and not bool(room["timer_started"]) and bool(room["winners_revealed"]):
+        db.execute(
+            """
+            UPDATE rooms
+            SET winners_revealed = 0,
+                drawing_locked = 0,
+                timer_started_at = NULL,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE code = ?
+            """,
+            (room["code"],),
+        )
+        return room_by_code(db, room["code"])
     if not bool(room["winners_revealed"]) and room_time_is_up(room) and room_players_are_rated(db, room["code"]):
         db.execute(
             """

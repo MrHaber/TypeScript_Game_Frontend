@@ -276,6 +276,130 @@ li {
   margin: 0 auto;
 }
 
+.quizLayout {
+  width: min(980px, 100%);
+  margin: 0 auto;
+}
+
+.quizPanel {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border-radius: 28px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.quizCard {
+  position: relative;
+  min-height: min(70vh, 680px);
+  overflow: hidden;
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: inset 0 0 0 2px rgba(37, 37, 61, 0.08);
+}
+
+.quizThemeArt {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+.questionBlock,
+.quizDone {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 18px;
+  padding: clamp(18px, 4vw, 42px);
+}
+
+.questionBlock {
+  min-height: min(70vh, 680px);
+  align-content: center;
+}
+
+.questionProgress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--purple-strong);
+  font-weight: 950;
+}
+
+.questionProgress span,
+.questionProgress strong {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: var(--purple-soft);
+}
+
+.questionBlock h1 {
+  max-width: 820px;
+  font-size: clamp(30px, 5vw, 56px);
+}
+
+.answerGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.answerGrid button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  min-height: 84px;
+  padding: 16px;
+  border-radius: 22px;
+  background: #f8f7ff;
+  color: var(--ink);
+  font-size: clamp(18px, 2.5vw, 24px);
+  font-weight: 950;
+  text-align: left;
+  box-shadow: inset 0 0 0 2px rgba(37, 37, 61, 0.08);
+}
+
+.answerGrid button:hover:not(:disabled) {
+  background: var(--purple-soft);
+  box-shadow: inset 0 0 0 3px var(--purple);
+}
+
+.answerGrid span {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 21px;
+  background: #fff;
+  color: var(--purple-strong);
+}
+
+.quizDone {
+  min-height: min(70vh, 680px);
+  place-items: center;
+  align-content: center;
+  text-align: center;
+}
+
+.quizDone svg {
+  color: var(--purple);
+}
+
+.quizDone p {
+  max-width: 560px;
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1.4;
+  font-weight: 850;
+}
+
 .drawingBoard,
 .kidTools,
 .panel,
@@ -1579,7 +1703,8 @@ li {
   .stageCard,
   .playerList article,
   .loginCards,
-  .roomSummary {
+  .roomSummary,
+  .answerGrid {
     grid-template-columns: 1fr;
   }
 

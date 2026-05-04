@@ -12,6 +12,7 @@ type ParentDashboardProps = {
   players: Player[];
   readyForReview: boolean;
   roomCode: string;
+  roomError?: string;
   settings: ParentSettings;
   stages: Stage[];
   onApprove: () => void;
@@ -39,6 +40,7 @@ export function ParentDashboard({
   players,
   readyForReview,
   roomCode,
+  roomError,
   settings,
   stages,
   onApprove,
@@ -117,6 +119,11 @@ export function ParentDashboard({
       <section className="parentGrid dashboardGrid">
         <div className="dashboardColumn">
           <Panel className="roomEntryPanel" title="Комната и вход" hint="Покажите код детям. Они входят по имени, а родитель видит их в списке.">
+            {roomError && (
+              <div className="loginError" role="alert">
+                {roomError}
+              </div>
+            )}
             {roomNotice && (
               <div key={roomNotice.id} className="roomUpdateToast" role="status">
                 {roomNotice.text}
