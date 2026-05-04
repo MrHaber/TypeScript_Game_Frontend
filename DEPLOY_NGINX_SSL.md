@@ -3,7 +3,7 @@
 Domain:
 
 ```text
-uchi.greathan.ru
+uch.greathan.ru
 ```
 
 Server IP:
@@ -24,13 +24,13 @@ Recommended layout:
 Make sure the domain has an `A` record:
 
 ```text
-uchi.greathan.ru -> 152.53.251.64
+uch.greathan.ru -> 152.53.251.64
 ```
 
 On your local machine:
 
 ```bash
-nslookup uchi.greathan.ru
+nslookup uch.greathan.ru
 ```
 
 It should return `152.53.251.64`.
@@ -64,11 +64,11 @@ nano .env
 Use:
 
 ```env
-FRONTEND_DOMAIN=uchi.greathan.ru
+FRONTEND_DOMAIN=uch.greathan.ru
 FRONTEND_BIND=127.0.0.1
 FRONTEND_PORT=8080
 VITE_API_URL=/api
-CORS_ORIGINS=https://uchi.greathan.ru,http://uchi.greathan.ru,http://127.0.0.1:5173,http://localhost:5173
+CORS_ORIGINS=https://uch.greathan.ru,http://uch.greathan.ru,http://127.0.0.1:5173,http://localhost:5173
 ```
 
 ## 4. Start Docker app
@@ -95,8 +95,8 @@ The health endpoint should return:
 Copy the prepared config:
 
 ```bash
-sudo cp deploy/nginx/uchi.greathan.ru.conf /etc/nginx/sites-available/uchi.greathan.ru.conf
-sudo ln -sf /etc/nginx/sites-available/uchi.greathan.ru.conf /etc/nginx/sites-enabled/uchi.greathan.ru.conf
+sudo cp deploy/nginx/uch.greathan.ru.conf /etc/nginx/sites-available/uch.greathan.ru.conf
+sudo ln -sf /etc/nginx/sites-available/uch.greathan.ru.conf /etc/nginx/sites-enabled/uch.greathan.ru.conf
 ```
 
 Disable the default site if it exists:
@@ -115,13 +115,13 @@ sudo systemctl reload nginx
 Now HTTP should work:
 
 ```bash
-curl http://uchi.greathan.ru/api/health
+curl http://uch.greathan.ru/api/health
 ```
 
 ## 6. Get HTTPS certificate
 
 ```bash
-sudo certbot --nginx -d uchi.greathan.ru
+sudo certbot --nginx -d uch.greathan.ru
 ```
 
 Choose redirect HTTP to HTTPS when Certbot asks.
@@ -137,13 +137,13 @@ sudo certbot renew --dry-run
 Open:
 
 ```text
-https://uchi.greathan.ru
+https://uch.greathan.ru
 ```
 
 Check API:
 
 ```bash
-curl https://uchi.greathan.ru/api/health
+curl https://uch.greathan.ru/api/health
 ```
 
 Expected:
